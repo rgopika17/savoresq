@@ -1,0 +1,71 @@
+<%- include('partials/shell-start', { title: 'Impact Profile', subtitle: 'Your rescue journey, level and achievements.', active: 'impact' }) %>
+
+<section class="hero">
+    <div class="profile-hero">
+        <div class="avatar"></div>
+        <div>
+            <h2 style="margin-bottom:4px"><%= user.organizationName || user.name %></h2>
+            <p><%= [user.city, user.state].filter(Boolean).join(", ") %> · PIN <%= user.pincode %></p>
+            <div class="hero-actions" style="margin-top:12px">
+                <span class="badge <%= user.approvalStatus === 'Approved' ? 'approved' : 'pending' %>"><%= user.approvalStatus === "Approved" ? "✓ Verified Partner" : "Verification " + user.approvalStatus %></span>
+                <span class="badge info"><%= level.icon %> <%= level.name %></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div><div><b><%= totalDonations %></b><span>Donations Posted</span></div></div>
+    <div class="stat"><div class="stat-ico purple"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"/></svg></div><div><b><%= completedCount %></b><span>Rescues Completed</span></div></div>
+    <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="m8.5 14.5-1.5 6 5-2.5 5 2.5-1.5-6"/></svg></div><div><b><%= successRate %>%</b><span>Success Rate</span></div></div>
+    <div class="stat"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></div><div><b><%= reviewCount ? avgRating : "—" %></b><span>Avg. Rating (<%= reviewCount %>)</span></div></div>
+</section>
+
+<section class="card">
+    <div class="section-head" style="margin-bottom:10px">
+        <div><h2><%= level.icon %> Level: <%= level.name %></h2><p><%= rescuedPortions %> portions rescued in total</p></div>
+    </div>
+    <div class="progress"><span style="width: <%= levelProgress %>%"></span></div>
+    <p class="muted small" style="margin-top:8px">
+        <% if (nextLevel) { %>
+            <%= nextLevel.min - rescuedPortions %> more portions to reach <strong><%= nextLevel.icon %> <%= nextLevel.name %></strong>
+        <% } else { %>
+             You have reached the highest level. Incredible work!
+        <% } %>
+    </p>
+</section>
+
+<section class="card">
+    <div class="section-head"><div><h2> Badges</h2><p>Unlock them by rescuing food consistently.</p></div></div>
+    <div class="badges-grid">
+        <% badges.forEach(b => { %>
+            <div class="achv <%= b.earned ? '' : 'locked' %>">
+                <div class="ic"><%= b.icon %></div>
+                <strong><%= b.name %></strong>
+                <small><%= b.earned ? "Unlocked " : b.hint %></small>
+            </div>
+        <% }) %>
+    </div>
+</section>
+
+<section class="card">
+    <div class="section-head">
+        <div><h2> What NGOs say</h2><p>Your latest reviews.</p></div>
+        <% if (recentReviews.length) { %><a class="btn btn-outline btn-sm" href="/hotel/feedback">See all reviews</a><% } %>
+    </div>
+    <% if (!recentReviews.length) { %>
+        <div class="empty"><div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="m3 7 9 7 9-7"/></svg></div><strong>No reviews yet</strong>They appear after your first completed rescue.</div>
+    <% } else { %>
+        <% recentReviews.forEach(r => { %>
+            <div class="review">
+                <div style="flex:1">
+                    <h4><%= r.foodName %> <span class="stars"><%= "★".repeat(Number(r.rating) || 0) %><i><%= "★".repeat(5 - (Number(r.rating) || 0)) %></i></span></h4>
+                    <p><%= r.feedback %></p>
+                    <small class="muted">— <%= r.ngoId ? (r.ngoId.organizationName || r.ngoId.name) : "NGO" %></small>
+                </div>
+            </div>
+        <% }) %>
+    <% } %>
+</section>
+
+<%- include('partials/shell-end') %>

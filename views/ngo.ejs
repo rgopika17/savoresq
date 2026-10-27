@@ -1,0 +1,264 @@
+<%- include('partials/shell-start', { title: 'NGO Dashboard', subtitle: 'Discover surplus food and rescue it for your community.', active: 'dashboard' }) %>
+
+<%
+    const fmt = (d) => new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    const hotelName = (h) => (h && (h.organizationName || h.name)) || "Verified Hotel";
+    const left = (d) => { const m = Math.max(0, Math.round((new Date(d) - Date.now()) / 60000)); return m >= 60 ? Math.floor(m / 60) + "h " + (m % 60) + "m left" : m + " min left"; };
+    const urgent = (d) => (new Date(d) - Date.now()) < 2 * 3600e3;
+%>
+
+<section class="hero">
+    <h2>Good food deserves a second chance.</h2>
+    <p>Find surplus food from verified hotels in your pincode, rescue it before it expires, and feed people who need it.</p>
+    <div class="hero-actions">
+        <a class="btn btn-white" href="#available"> See Available Food</a>
+        <a class="btn btn-ghost-light" href="#history">My Rescues</a>
+    </div>
+</section>
+
+<section class="stats dense">
+    <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div><div><b><%= donations.length %></b><span>Available Now</span></div></div>
+    <div class="stat"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.6 5.2"/></svg></div><div><b><%= totalAccepted %></b><span>Accepted (all time)</span></div></div>
+    <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg></div><div><b><%= acceptedCount %></b><span>Awaiting pickup</span></div></div>
+    <div class="stat"><div class="stat-ico purple"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"/></svg></div><div><b><%= completedCount %></b><span>Completed Rescues</span></div></div>
+    <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.6a5.2 5.2 0 0 0-7.4 0L12 7l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 21.8l8.8-8.8a5.2 5.2 0 0 0 0-7.4z"/></svg></div><div><b><%= ngoRescuedQuantity || 0 %></b><span>Portions Rescued</span></div></div>
+    <% if (valueRescued > 0) { %><div class="stat"><div class="stat-ico slate">₹</div><div><b>₹<%= valueRescued.toLocaleString("en-IN") %></b><span>Value Rescued</span></div></div><% } %>
+</section>
+
+<% if (completedWithoutFeedback && completedWithoutFeedback.length > 0 && typeof pendingFeedbackCount !== "undefined" && pendingFeedbackCount > 0) { %>
+    <div class="hint-box warn" style="margin-top:0">
+         <strong><%= pendingFeedbackCount %></strong> completed rescue<%= pendingFeedbackCount === 1 ? "" : "s" %> waiting for your feedback.
+        <a href="/ngo/feedback" style="font-weight:800">Rate them →</a>
+    </div>
+<% } %>
+
+
+<% if (forecasts.length) { %>
+<section class="card" id="forecast">
+    <div class="section-head"><div><h2><span class="ai-tag">AI</span> Expected Soon Near You</h2><p>Hotels in your pincode that usually have surplus around now — plan your pickup team in advance.</p></div></div>
+    <% forecasts.forEach(f => { %>
+        <div class="fc-row"><div class="map-dot"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5l8-2v18M12 9h8v12M8 9h1M8 13h1M8 17h1M15 13h2M15 17h2M3 21h18"/></svg></div><div><strong><%= f.hotel %></strong><small>Usually posts on <%= f.day %> <%= f.slot %> · about <%= f.avgPortions %> portions</small></div><b><%= f.daysAway === 0 ? "Today" : f.daysAway === 1 ? "Tomorrow" : f.nextLabel %><br><small style="font-weight:600"><%= f.confidence %>% sure</small></b></div>
+    <% }) %>
+</section>
+<% } %>
+
+<section class="card" id="map">
+    <div class="section-head">
+        <div>
+            <h2><span class="ai-tag">NEW</span> Rescue Radar &amp; Smart Route</h2>
+            <p>Works fully offline. Food is placed by distance and direction from your NGO, and the best pickup order is planned for you.</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-outline btn-sm" type="button" id="useHere">Use my current location</button><span class="badge pending" id="mapStatus">Scanning…</span></div>
+    </div>
+    <div class="radar-grid">
+        <div class="radar-box"><span class="radar-tag" id="radarTag">PIN <%= me.pincode %></span><div id="radarHost"></div>
+            <div class="radar-legend"><span><i style="background:#dc2626"></i>Urgent &lt; 1 h</span><span><i style="background:#d97706"></i>Soon</span><span><i style="background:#16a34a"></i>Plenty of time</span><span><i style="background:#38bdf8"></i>You</span></div></div>
+        <div id="routePanel" class="route-panel"></div>
+    </div>
+</section>
+
+<% if (taste.length) { %>
+<section class="card" id="taste">
+    <div class="section-head"><div><h2><span class="ai-tag">Memory</span> What your NGO usually rescues</h2><p>Learned from the donations you accepted. Foods you usually take are flagged below.</p></div>
+        <label class="toggle-usual"><input type="checkbox" id="onlyUsual"> Show only my usual foods</label></div>
+    <div class="chips">
+        <% taste.forEach((t, i) => { %><span class="chip taste-chip <%= i < 3 ? 'top' : '' %>"><span class="mem-thumb"><%- foodVisual(t.sample, 24) %></span><%= t.label %> <small>× <%= t.count %></small></span><% }) %>
+    </div>
+</section>
+<% } %>
+
+<section class="card" id="available">
+    <div class="section-head">
+        <div>
+            <h2> Available Food Near You</h2>
+            <p>Sorted by <strong>Smart Match</strong> — distance, time left, your usual size and pickup record.</p>
+        </div>
+    </div>
+
+    <% if (donations.length === 0) { %>
+        <div class="empty">
+            <div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15M5 19c2-5 5-8 9-10"/></svg></div>
+            <strong>No matching donations right now</strong>
+            New donations appear here as soon as a verified hotel posts surplus food in your pincode.
+        </div>
+    <% } else { %>
+        <div class="donation-grid">
+            <% donations.forEach(d => { %>
+                <% const isUsual = usualLabels.includes(getFoodVisual(d.foodName).label); %>
+                <article class="donation" id="don-<%= d._id %>" data-usual="<%= isUsual ? 1 : 0 %>">
+                    <div class="food-media">
+                        <%- foodVisual(d.foodName, 64, d.image) %>
+                        <span class="badge available"> Available</span>
+                        <% if (isUsual) { %><span class="usual-tag">★ Your usual</span><% } %>
+                        <span class="pin">PIN <%= d.pincode %></span>
+                    </div>
+                    <div class="donation-body">
+                        <h3><%= d.foodName %></h3>
+                        <div class="meta-line"> <strong><%= hotelName(d.hotelId) %></strong></div>
+                        <div class="meta-line"> <strong><%= d.quantity %></strong> portions</div>
+                        <div class="meta-line"> <span class="countdown" style="<%= urgent(d.expiryTime) ? 'color:var(--red)' : '' %>"><%= left(d.expiryTime) %></span> · <%= fmt(d.expiryTime) %></div>
+                        <% if (d.estimatedValue > 0) { %><div class="meta-line">₹ <strong>₹<%= d.estimatedValue.toLocaleString("en-IN") %></strong> approx. value</div><% } %>
+                        <% const m = matches[String(d._id)]; if (m) { %>
+                            <div class="match-pill"><span class="ai-tag">Auto</span> Smart Match <b><%= m.pct %>%</b><span class="bar"><i style="width:<%= m.pct %>%"></i></span></div>
+                            <div class="match-reasons"><%= m.reasons.join(" · ") %></div>
+                        <% } %>
+                        <div class="meta-line" data-dist="<%= d._id %>"></div>
+                        <form class="donation-actions" action="/donation/<%= d._id %>/accept" method="POST" onsubmit="return confirm('Accept this food donation?')">
+                            <button class="btn btn-primary btn-block" type="submit"> Accept Donation</button>
+                        </form>
+                    </div>
+                </article>
+            <% }) %>
+        </div>
+    <% } %>
+</section>
+
+<section class="card" id="history">
+    <div class="section-head">
+        <div>
+            <h2> My Rescues</h2>
+            <p>Track the donations you accepted and completed.</p>
+        </div>
+    </div>
+
+    <% if (myDonations.length === 0) { %>
+        <div class="empty">
+            <div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.6 5.2"/></svg></div>
+            <strong>No rescues yet</strong>
+            Once you accept a donation it will appear here so you can track it.
+        </div>
+    <% } else { %>
+        <div class="table-wrap">
+            <table class="table">
+                <thead><tr><th>Food</th><th>Hotel</th><th>Portions</th><th>Pincode</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                <% myDonations.forEach(d => { %>
+                    <tr>
+                        <td><strong><%= d.foodName %></strong></td>
+                        <td><%= hotelName(d.hotelId) %><% if (d.hotelId && d.hotelId.phone) { %><br><span class="muted small"> <%= d.hotelId.phone %></span><% } %></td>
+                        <td><%= d.quantity %></td>
+                        <td><%= d.pincode %></td>
+                        <td class="nowrap"><%= fmt(d.expiryTime) %></td>
+                        <td><span class="badge <%= d.status.toLowerCase() %>"><%= d.status %></span></td>
+                        <td>
+                            <% if (d.status === "Accepted") {
+                                const minsOld = d.acceptedAt ? (Date.now() - new Date(d.acceptedAt)) / 60000 : 999;
+                                const undoLeft = Math.ceil(UNDO_MINUTES - minsOld); %>
+                                <% if (undoLeft > 0) { %>
+                                    <form class="inline-form" action="/ngo/donation/<%= d._id %>/undo" method="POST">
+                                        <button class="btn btn-outline btn-sm" type="submit" title="Accepted by mistake? Free undo for 5 minutes, the hotel is not told">Undo · <%= undoLeft %> min left</button>
+                                    </form>
+                                <% } %>
+                                <% if (!d.onTheWayAt) { %>
+                                    <form class="inline-form" action="/ngo/donation/<%= d._id %>/ontheway" method="POST"><button class="btn btn-outline btn-sm" type="submit">On my way</button></form>
+                                <% } %>
+                                <form class="inline-form" action="/ngo/donation/<%= d._id %>/complete" method="POST" onsubmit="return confirm('Mark this donation as successfully rescued?')">
+                                    <button class="btn btn-primary btn-sm" type="submit"> Mark Rescued</button>
+                                </form>
+                                <form class="inline-form" action="/ngo/donation/<%= d._id %>/release" method="POST" onsubmit="return askReason(this, 'releaseReason', 'Why can’t you collect <%= d.foodName.replace(/['\"]/g, '') %>?', 'Release food')">
+                                    <input type="hidden" name="releaseReason">
+                                    <button class="btn btn-danger-outline btn-sm" type="submit" title="Changed your mind? Give it back so others can take it">↩ Release</button>
+                                </form>
+                            <% } else if (d.status === "Completed") { %>
+                                <a class="btn btn-outline btn-sm" href="/ngo/feedback">Feedback</a>
+                            <% } %>
+                            <% if (["Accepted", "Completed"].includes(d.status)) { %><a class="btn btn-outline btn-sm" href="/chat/donation/<%= d._id %>">Message hotel</a><% } %>
+                            <a class="muted small" style="margin-left:6px" href="/support?donation=<%= d._id %>&category=Fraud%20or%20misconduct">Report to admin</a>
+                            <% if (d.status === "Accepted" && d.pickupCode) { %><div class="code-box">Pickup code <b><%= d.pickupCode %></b><span><%= d.pickedUpAt ? "Verified by hotel" : "Show this to the hotel" %></span></div><% } %>
+                        </td>
+                    </tr>
+                <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</section>
+
+
+<% const mapDonations = donations.map(d => ({
+    id: String(d._id), food: d.foodName, qty: d.quantity, left: left(d.expiryTime), mins: Math.round((new Date(d.expiryTime) - Date.now()) / 60000), urgent: urgent(d.expiryTime),
+    hotel: hotelName(d.hotelId),
+    addr: d.hotelId ? [d.hotelId.address, d.hotelId.city, d.hotelId.state].filter(Boolean).join(", ") : "",
+    city: d.hotelId && d.hotelId.city, state: d.hotelId && d.hotelId.state, address: d.hotelId && d.hotelId.address,
+    pincode: d.pincode,
+    loc: d.hotelId && d.hotelId.location && d.hotelId.location.lat != null ? d.hotelId.location : null
+})); %>
+<%- include('partials/heroes', { heroes: heroes, meId: currentUser.id }) %>
+
+<%- include('partials/reason-modal') %>
+<script>
+(function () {
+    var cb = document.getElementById("onlyUsual"); if (!cb) return;
+    cb.addEventListener("change", function () {
+        document.querySelectorAll("#available .donation").forEach(function (a) { a.style.display = (cb.checked && a.dataset.usual !== "1") ? "none" : ""; });
+    });
+})();
+</script>
+<script src="/js/geo.js"></script>
+<script src="/js/radar.js"></script>
+<script>
+(function () {
+    var ME = <%- JSON.stringify({ address: me.address, city: me.city, state: me.state, pincode: me.pincode, loc: (me.location && me.location.lat != null) ? me.location : null }) %>;
+    var ITEMS = <%- JSON.stringify(mapDonations).replace(/</g, "\\u003c") %>;
+    var CO2 = <%= co2PerPortion %>;
+    var host = document.getElementById("radarHost"), panel = document.getElementById("routePanel"), status = document.getElementById("mapStatus");
+    var you = null, approx = false, plan = null;
+    function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : t; return d.innerHTML; }
+
+    function render() {
+        if (!you) return;
+        var items = ITEMS.filter(function (i) { return i.pos; }).map(function (i) { return { id: i.id, label: i.food, qty: i.qty, mins: i.mins, pos: i.pos, hotel: i.hotel }; });
+        plan = RescueRadar.draw(host, { you: you, items: items, youLabel: "You (NGO)", onSelect: function (id) {
+            var el = document.getElementById("don-" + id); if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.classList.add("flash-card"); setTimeout(function () { el.classList.remove("flash-card"); }, 1800); }
+        } });
+        var r = plan.route, h = "";
+        if (!ITEMS.length) h = '<div class="empty"><strong>No food to plan right now</strong>New donations in your pincode appear on the radar the moment a hotel posts them.</div>';
+        else if (!r.length) h = '<div class="empty"><strong>No reachable pickups</strong>Everything nearby would expire before you can reach it.</div>';
+        else {
+            h += '<b style="font-size:16px">Best pickup order</b><p class="muted" style="margin:2px 0 0;font-size:13px">Urgent food first, then the shortest path</p>';
+            h += '<div class="rr-sum"><div><b>' + r.length + '</b><span>pickup' + (r.length > 1 ? "s" : "") + '</span></div><div><b>' + (plan.totalKm < 1 ? Math.round(plan.totalKm * 1000) + " m" : plan.totalKm.toFixed(1) + " km") + '</b><span>total trip</span></div><div><b>~' + RescueRadar.fmtMins(plan.totalMin) + '</b><span>incl. stops</span></div></div>';
+            r.forEach(function (s, i) {
+                var it = ITEMS.filter(function (x) { return x.id === s.item.id; })[0];
+                h += '<a class="rr-stop" href="#don-' + esc(s.item.id) + '"><div class="rr-n" style="background:' + RescueRadar.color(s.item.mins) + '">' + (i + 1) + '</div><div><b>' + esc(it.hotel) + '</b><small>' + esc(s.item.label) + ' · ' + s.item.qty + ' portions · ' + RescueRadar.fmtMins(s.item.mins) + ' left</small></div><div class="rr-leg">' + (s.fromYou < 1 ? Math.round(s.fromYou * 1000) + " m" : s.fromYou.toFixed(1) + " km") + '<small>from you · ' + s.dirYou + '</small><small>next leg ' + Math.max(1, Math.round(s.legMin)) + ' min</small></div></a>';
+            });
+            h += '<div class="rr-impact"><b>' + plan.portions + ' portions</b> in one trip = about <b>' + plan.portions + ' meals</b> · saves ≈ <b>' + Math.round(plan.portions * CO2) + ' kg CO₂</b></div>';
+            h += '<button class="btn btn-primary btn-block" type="button" id="acceptAll" style="margin-top:12px">Accept all ' + r.length + ' and start route</button>';
+            if (plan.skipped.length) h += '<div class="muted small" style="margin-top:8px">' + plan.skipped.length + ' item' + (plan.skipped.length > 1 ? "s" : "") + ' skipped: would expire before you can reach ' + (plan.skipped.length > 1 ? "them" : "it") + '.</div>';
+            h += '<div class="muted small" style="margin-top:6px">Distances are straight-line. Time assumes about 25 km/h plus 30% for roads. No internet needed.</div>';
+        }
+        panel.innerHTML = h;
+        var btn = document.getElementById("acceptAll");
+        if (btn) btn.onclick = async function () {
+            if (!confirm("Accept all " + plan.route.length + " donations on this route?")) return;
+            btn.disabled = true; btn.textContent = "Accepting…";
+            for (var i = 0; i < plan.route.length; i++) { try { await fetch("/donation/" + plan.route[i].item.id + "/accept", { method: "POST", credentials: "same-origin" }); } catch (e) {} }
+            location.href = "/ngo#mine"; location.reload();
+        };
+        status.className = "badge approved";
+        status.textContent = "PIN " + ME.pincode + " · " + items.length + " on radar" + (approx ? " · approximate" : "");
+    }
+
+    async function init() {
+        var mine = ME.loc ? { lat: ME.loc.lat, lng: ME.loc.lng, precise: true } : await Geo.locate(ME);
+        if (mine && mine.precise && !ME.loc) Geo.saveMine(mine);
+        approx = !!mine && mine.precise === false; you = Geo.spread(mine, 'ngo-' + ME.pincode + ME.address); you = you || mine;
+        for (var k = 0; k < ITEMS.length; k++) {
+            var i = ITEMS[k], raw = i.loc ? { lat: i.loc.lat, lng: i.loc.lng, precise: true } : await Geo.locate({ address: i.address, city: i.city, state: i.state, pincode: i.pincode });
+            i.pos = Geo.spread(raw, i.id);
+        }
+        render();
+    }
+    init();
+
+    var btn = document.getElementById("useHere");
+    if (btn) btn.addEventListener("click", async function () {
+        btn.disabled = true; btn.textContent = "Locating…";
+        var p = await Geo.here();
+        btn.disabled = false; btn.textContent = "Use my current location";
+        if (!p) { alert("Could not get your location. Please allow location access in the browser."); return; }
+        you = p; approx = false; Geo.saveMine(p); render();
+    });
+})();
+</script>
+
+<%- include('partials/shell-end') %>

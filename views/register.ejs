@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SavoResQ - Register</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f5f8f6;
+        }
+
+        .register-wrapper {
+            flex: 1;
+            padding: 40px 20px;
+        }
+
+        .register-card {
+            max-width: 750px;
+            margin: auto;
+        }
+
+        .brand-icon {
+            text-align: center;
+            font-size: 55px;
+            margin-bottom: 10px;
+        }
+
+        .register-card h1 {
+            text-align: center;
+            color: #198754;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #198754;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .role-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .role-option {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .role-option:hover {
+            border-color: #198754;
+            background: #f0faf4;
+        }
+
+        .role-option input {
+            margin-right: 8px;
+        }
+
+        .role-icon {
+            display: block;
+            font-size: 35px;
+            margin-bottom: 8px;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .verification-note {
+            background: #fff8e1;
+            border-left: 4px solid #f0ad4e;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            color: #665200;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #6b7280;
+        }
+
+        .login-link a {
+            color: #198754;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        /* PASSWORD STRENGTH */
+
+        .password-strength {
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            min-height: 20px;
+        }
+
+        .password-strength.red {
+            color: #dc3545;
+        }
+
+        .password-strength.orange {
+            color: #f0ad4e;
+        }
+
+        .password-strength.green {
+            color: #198754;
+        }
+
+        .password-input {
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .password-input.red {
+            border: 2px solid #dc3545 !important;
+        }
+
+        .password-input.orange {
+            border: 2px solid #f0ad4e !important;
+        }
+
+        .password-input.green {
+            border: 2px solid #198754 !important;
+        }
+
+        /* CONFIRM PASSWORD */
+
+        .confirm-message {
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            min-height: 20px;
+        }
+
+        .confirm-message.red {
+            color: #dc3545;
+        }
+
+        .confirm-message.green {
+            color: #198754;
+        }
+
+        .confirm-input.red {
+            border: 2px solid #dc3545 !important;
+        }
+
+        .confirm-input.green {
+            border: 2px solid #198754 !important;
+        }
+
+        .password-tips {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 600px) {
+            .role-container,
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+
+        <div class="logo">
+            SavoResQ
+        </div>
+
+        <div class="nav-links">
+            <a href="/" class="btn-outline">Home</a>
+            <a href="/login" class="btn-primary">Login</a>
+        </div>
+
+    </nav>
+
+    <main class="register-wrapper">
+
+        <div class="card register-card">
+
+            <div class="brand-icon">🌱</div>
+
+            <h1>Join SavoResQ</h1>
+
+            <p class="subtitle">
+                Register your organization to participate in food rescue
+            </p>
+
+            <form
+                action="/register"
+                method="POST"
+                id="registerForm"
+                enctype="multipart/form-data"
+            >
+
+                <h3 class="section-title">Account Type</h3>
+
+                <div class="role-container">
+
+                    <label class="role-option">
+
+                        <span class="role-icon">🏨</span>
+
+                        <input
+                            type="radio"
+                            name="role"
+                            value="hotel"
+                            required
+                        >
+
+                        Hotel / Food Donor
+
+                    </label>
+
+                    <label class="role-option">
+
+                        <span class="role-icon">🤝</span>
+
+                        <input
+                            type="radio"
+                            name="role"
+                            value="ngo"
+                            required
+                        >
+
+                        NGO / Food Recipient
+
+                    </label>
+
+                </div>
+
+                <h3 class="section-title">Organization Details</h3>
+
+                <div class="form-group">
+
+                    <label for="organizationName">
+                        Organization / Hotel Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="organizationName"
+                        name="organizationName"
+                        placeholder="Enter official organization name"
+                        required
+                    >
+
+                </div>
+
+                <div class="two-column">
+
+                    <div class="form-group">
+
+                        <label for="registrationNumber">
+                            Registration / License Number
+                        </label>
+
+                        <input
+                            type="text"
+                            id="registrationNumber"
+                            name="registrationNumber"
+                            placeholder="Enter registration number"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="verificationDocument">
+                            Verification Document
+                        </label>
+
+                        <input
+                            type="file"
+                            id="verificationDocument"
+                            name="verificationDocument"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            required
+                        >
+                        <small style="display:block;margin-top:8px;color:#6b7280;">
+                            Upload registration/license document (PDF, JPG, JPEG or PNG, max 5 MB).
+                        </small>
+
+                    </div>
+
+                </div>
+
+                <h3 class="section-title">Contact Person</h3>
+
+                <div class="form-group">
+
+                    <label for="name">
+                        Contact Person Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Enter contact person's name"
+                        required
+                    >
+
+                </div>
+
+                <div class="two-column">
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Official Email
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="organization@example.com"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="phone">
+                            Phone Number
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            placeholder="Enter phone number"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <h3 class="section-title">Organization Location</h3>
+
+                <div class="form-group">
+
+                    <label for="address">
+                        Address
+                    </label>
+
+                    <input
+                        type="text"
+                        id="address"
+                        name="address"
+                        placeholder="Enter complete organization address"
+                        required
+                    >
+
+                </div>
+
+                <div class="two-column">
+
+                    <div class="form-group">
+
+                        <label for="city">
+                            City
+                        </label>
+
+                        <input
+                            type="text"
+                            id="city"
+                            name="city"
+                            placeholder="City"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="state">
+                            State
+                        </label>
+
+                        <input
+                            type="text"
+                            id="state"
+                            name="state"
+                            placeholder="State"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <div class="two-column">
+
+                    <div class="form-group">
+
+                        <label for="country">
+                            Country
+                        </label>
+
+                        <input
+                            type="text"
+                            id="country"
+                            name="country"
+                            value="India"
+                            required
+                        >
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="pincode">
+                            Pincode
+                        </label>
+
+                        <input
+                            type="text"
+                            id="pincode"
+                            name="pincode"
+                            placeholder="Enter pincode"
+                            pattern="[0-9]{6}"
+                            maxlength="6"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+                <h3 class="section-title">Account Security</h3>
+
+                <!-- PASSWORD -->
+
+                <div class="form-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="password-input"
+                        placeholder="Create a strong password"
+                        minlength="8"
+                        required
+                    >
+
+                    <div
+                        id="passwordStrength"
+                        class="password-strength"
+                    ></div>
+
+                    <div class="password-tips">
+                        Use at least 8 characters with uppercase,
+                        lowercase, number and special character.
+                    </div>
+
+                </div>
+
+                <!-- CONFIRM PASSWORD -->
+
+                <div class="form-group">
+
+                    <label for="confirmPassword">
+                        Confirm Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        class="password-input"
+                        placeholder="Re-enter your password"
+                        minlength="8"
+                        required
+                    >
+
+                    <div
+                        id="confirmMessage"
+                        class="confirm-message"
+                    ></div>
+
+                </div>
+
+                <div class="verification-note">
+
+                    <strong>🛡️ Verification Notice</strong>
+
+                    <p>
+                        Your organization will be reviewed by a SavoResQ
+                        Admin / Authorized Verifier. You will receive access
+                        to operational features only after approval.
+                    </p>
+
+                </div>
+
+                <br>
+
+                <button
+                    type="submit"
+                    class="form-button"
+                    id="submitButton"
+                >
+                    Submit Registration →
+                </button>
+
+            </form>
+
+            <div class="login-link">
+
+                Already registered?
+
+                <a href="/login">
+                    Login here
+                </a>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer>
+
+        <p>
+            © 2026 SavoResQ | Surplus Food Rescue & Distribution
+        </p>
+
+    </footer>
+
+
+    <script>
+
+        const password =
+            document.getElementById("password");
+
+        const confirmPassword =
+            document.getElementById("confirmPassword");
+
+        const passwordStrength =
+            document.getElementById("passwordStrength");
+
+        const confirmMessage =
+            document.getElementById("confirmMessage");
+
+        const registerForm =
+            document.getElementById("registerForm");
+
+
+        // ==========================================
+        // PASSWORD STRENGTH
+        // ==========================================
+
+        function checkPasswordStrength() {
+
+            const value = password.value;
+
+            password.classList.remove(
+                "red",
+                "orange",
+                "green"
+            );
+
+            passwordStrength.classList.remove(
+                "red",
+                "orange",
+                "green"
+            );
+
+            if (value.length === 0) {
+
+                passwordStrength.textContent = "";
+
+                checkConfirmPassword();
+
+                return;
+            }
+
+
+            let score = 0;
+
+            if (value.length >= 8) {
+                score++;
+            }
+
+            if (/[A-Z]/.test(value)) {
+                score++;
+            }
+
+            if (/[a-z]/.test(value)) {
+                score++;
+            }
+
+            if (/[0-9]/.test(value)) {
+                score++;
+            }
+
+            if (/[^A-Za-z0-9]/.test(value)) {
+                score++;
+            }
+
+
+            if (score <= 2) {
+
+                password.classList.add("red");
+
+                passwordStrength.classList.add("red");
+
+                passwordStrength.textContent =
+                    "🔴 Weak password";
+
+            }
+            else if (score <= 4) {
+
+                password.classList.add("orange");
+
+                passwordStrength.classList.add("orange");
+
+                passwordStrength.textContent =
+                    "🟠 Medium password";
+
+            }
+            else {
+
+                password.classList.add("green");
+
+                passwordStrength.classList.add("green");
+
+                passwordStrength.textContent =
+                    "🟢 Strong password";
+
+            }
+
+            checkConfirmPassword();
+        }
+
+
+        // ==========================================
+        // CONFIRM PASSWORD
+        // ==========================================
+
+        function checkConfirmPassword() {
+
+            const original =
+                password.value;
+
+            const confirmation =
+                confirmPassword.value;
+
+            confirmPassword.classList.remove(
+                "red",
+                "green"
+            );
+
+            confirmMessage.classList.remove(
+                "red",
+                "green"
+            );
+
+
+            if (confirmation.length === 0) {
+
+                confirmMessage.textContent = "";
+
+                return false;
+            }
+
+
+            if (original === confirmation) {
+
+                confirmPassword.classList.add("green");
+
+                confirmMessage.classList.add("green");
+
+                confirmMessage.textContent =
+                    "🟢 Passwords match";
+
+                return true;
+
+            }
+            else {
+
+                confirmPassword.classList.add("red");
+
+                confirmMessage.classList.add("red");
+
+                confirmMessage.textContent =
+                    "🔴 Passwords do not match";
+
+                return false;
+            }
+        }
+
+
+        password.addEventListener(
+            "input",
+            checkPasswordStrength
+        );
+
+
+        confirmPassword.addEventListener(
+            "input",
+            checkConfirmPassword
+        );
+
+
+        // ==========================================
+        // FINAL FORM VALIDATION
+        // ==========================================
+
+        registerForm.addEventListener(
+            "submit",
+            function(event) {
+
+                const passwordValue =
+                    password.value;
+
+                const confirmValue =
+                    confirmPassword.value;
+
+
+                if (passwordValue.length < 8) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Password must contain at least 8 characters."
+                    );
+
+                    password.focus();
+
+                    return;
+                }
+
+
+                if (passwordValue !== confirmValue) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Passwords do not match."
+                    );
+
+                    confirmPassword.focus();
+
+                    return;
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

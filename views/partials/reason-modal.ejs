@@ -1,0 +1,34 @@
+<%# Reusable "reason required" dialog. Use:  onsubmit="return askReason(this, 'fieldName', 'Title', 'Confirm label')" %>
+<div class="reason-modal" id="reasonModal" role="dialog" aria-modal="true" aria-labelledby="reasonTitle">
+    <div class="reason-box">
+        <h3 id="reasonTitle">Reason</h3>
+        <p class="muted small" id="reasonHelp">The organization will be able to see this reason.</p>
+        <textarea id="reasonText" maxlength="300" placeholder="Write the reason here…"></textarea>
+        <div class="reason-err" id="reasonErr"></div>
+        <div class="reason-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="reasonCancel">Cancel</button>
+            <button type="button" class="btn btn-danger btn-sm" id="reasonOk">Confirm</button>
+        </div>
+    </div>
+</div>
+<script>
+function askReason(form, field, title, okLabel) {
+    var m = document.getElementById("reasonModal"), t = document.getElementById("reasonText"), err = document.getElementById("reasonErr");
+    document.getElementById("reasonTitle").textContent = title || "Reason";
+    document.getElementById("reasonOk").textContent = okLabel || "Confirm";
+    t.value = ""; t.classList.remove("bad"); err.textContent = "";
+    m.classList.add("open"); setTimeout(function () { t.focus(); }, 50);
+    function close() { m.classList.remove("open"); okBtn.onclick = cancelBtn.onclick = null; document.removeEventListener("keydown", onKey); }
+    function submit() {
+        var v = t.value.trim();
+        if (v.length < 3) { t.classList.add("bad"); err.textContent = "Please write a reason (at least 3 characters)."; t.focus(); return; }
+        form.querySelector('[name="' + field + '"]').value = v;
+        close(); form.onsubmit = null; form.submit();
+    }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    var okBtn = document.getElementById("reasonOk"), cancelBtn = document.getElementById("reasonCancel");
+    okBtn.onclick = submit; cancelBtn.onclick = close; document.addEventListener("keydown", onKey);
+    t.oninput = function () { t.classList.remove("bad"); err.textContent = ""; };
+    return false;   // never submit directly - only after a valid reason
+}
+</script>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Certificate · SavoResQ</title>
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="verify-page">
+    <div class="verify-card">
+    <% if (donation) {
+        const h = donation.hotelId || {}, n = donation.acceptedBy || {}; %>
+        <div class="tick">✓</div>
+        <h2>Genuine SavoResQ certificate</h2>
+        <p class="muted">This food rescue is recorded on the platform.</p>
+        <dl>
+            <div><dt>Reference</dt><dd><%= ref %></dd></div>
+            <div><dt>Donated by</dt><dd><%= h.organizationName || h.name %></dd></div>
+            <div><dt>Collected by</dt><dd><%= n.organizationName || n.name %></dd></div>
+            <div><dt>Food</dt><dd><%= donation.quantity %> portions of <%= donation.foodName %></dd></div>
+            <div><dt>Completed on</dt><dd><%= new Date(donation.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) %></dd></div>
+        </dl>
+    <% } else { %>
+        <div class="tick bad">✕</div>
+        <h2>Certificate not found</h2>
+        <p class="muted">No completed rescue matches reference <strong><%= ref %></strong>. Please check the code printed on the certificate.</p>
+    <% } %>
+        <p class="small muted" style="margin-top:22px">🌱 SavoResQ — Surplus Food Rescue &amp; Distribution</p>
+    </div>
+</div>
+</body></html>

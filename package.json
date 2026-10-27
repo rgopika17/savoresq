@@ -1,0 +1,34 @@
+{
+  "name": "savorresq",
+  "version": "1.0.0",
+  "description": "SavoResQ - Surplus Food Rescue and Distribution System (Node.js + Express + EJS + MongoDB)",
+  "main": "app.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "seed": "node seed-demo.js"
+  },
+  "keywords": [
+    "savorresq",
+    "food-rescue",
+    "surplus-food",
+    "ngo",
+    "hotel",
+    "mongodb",
+    "express",
+    "mongodb-compass"
+  ],
+  "author": "SavoResQ",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^17.2.2",
+    "ejs": "^6.0.1",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "mongoose": "^8.18.0",
+    "multer": "^2.4.0"
+  }
+}

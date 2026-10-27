@@ -1,0 +1,321 @@
+<%- include('partials/shell-start', { title: 'Hotel Dashboard', subtitle: 'Turn today’s surplus into tomorrow’s meals.', active: 'dashboard' }) %>
+
+<%
+    const statusIcon = { Available: "", Accepted: "", Completed: "", Expired: "", Cancelled: "" };
+    const fmt = (d) => new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+%>
+
+<section class="hero">
+    <h2>Good food should never go to waste.</h2>
+    <p>Share your surplus with verified NGOs near you and help feed people in your community.</p>
+    <div class="hero-actions">
+        <a class="btn btn-white" href="#post">＋ Post a Donation</a>
+        <a class="btn btn-ghost-light" href="/hotel/profile">View Impact Profile</a>
+    </div>
+</section>
+
+<section class="stats dense">
+    <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div><div><b><%= totalDonations %></b><span>Total Donations</span></div></div>
+    <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div><div><b><%= available %></b><span>Available</span></div></div>
+    <div class="stat"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg></div><div><b><%= accepted %></b><span>Accepted</span></div></div>
+    <div class="stat"><div class="stat-ico purple"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"/></svg></div><div><b><%= completed %></b><span>Completed</span></div></div>
+    <div class="stat"><div class="stat-ico slate"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><b><%= expired %></b><span>Expired</span></div></div>
+    <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.6a5.2 5.2 0 0 0-7.4 0L12 7l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 21.8l8.8-8.8a5.2 5.2 0 0 0 0-7.4z"/></svg></div><div><b><%= rescuedQuantity %></b><span>Portions Rescued</span></div></div>
+    <% if (valueRescued > 0) { %><div class="stat"><div class="stat-ico purple">₹</div><div><b>₹<%= valueRescued.toLocaleString("en-IN") %></b><span>Value Rescued</span></div></div><% } %>
+</section>
+
+
+<section class="grid-2">
+    <div class="card" id="post">
+        <div class="card-head"><div class="stat-ico">＋</div><h2>Post New Donation</h2></div>
+        <p class="card-sub">Share safe surplus food with approved NGOs in your area.</p>
+
+        <form action="/donation" method="POST" enctype="multipart/form-data">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="foodName">Food Name</label>
+                    <input id="foodName" name="foodName" type="text" placeholder="e.g. Vegetable Biryani" maxlength="80" required>
+                </div>
+                <div class="field">
+                    <label for="quantity">Quantity (portions)</label>
+                    <input id="quantity" name="quantity" type="number" min="1" max="100000" placeholder="e.g. 50" required>
+                </div>
+                <div class="field">
+                    <label for="pincode">Pincode</label>
+                    <input id="pincode" name="pincode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" value="<%= hotelPincode %>" required>
+                </div>
+                <div class="field">
+                    <label for="expiryTime">Safe to eat until</label>
+                    <input id="expiryTime" name="expiryTime" type="datetime-local" required>
+                </div>
+                <div class="field">
+                    <label for="estimatedValue">Approx. value in ₹ <span class="muted">(optional)</span></label>
+                    <input id="estimatedValue" name="estimatedValue" type="number" min="0" max="10000000" placeholder="e.g. 3000">
+                    <span class="help">For your records and impact reports only — NGOs get the food free.</span>
+                </div>
+                <div class="field full" id="memoryBox" <%= foodMemory.length ? "" : "hidden" %>>
+                    <label>Your usual foods <span class="ai-tag">Memory</span> <span class="muted">— tap to post again</span></label>
+                    <div class="chips" id="memChips">
+                        <% foodMemory.forEach(m => { %>
+                            <button type="button" class="chip mem-chip" data-name="<%= m.name %>" data-qty="<%= m.lastQty %>" data-img="<%= m.image || '' %>">
+                                <span class="mem-thumb"><%- foodVisual(m.name, 24, m.image) %></span><%= m.name %> <small>× <%= m.times %> · ~<%= m.avgQty %> portions</small>
+                            </button>
+                        <% }) %>
+                    </div>
+                </div>
+                <div class="field full">
+                    <label>Picture for this food</label>
+                    <div class="live-prev">
+                        <div class="food-media" id="foodPreview"></div>
+                        <div class="live-cap" id="foodPreviewCap">Type a food name — its picture appears here.</div>
+                    </div>
+                </div>
+                <div class="field full">
+                    <label for="foodImage">Photo of the food <span class="muted">(optional, recommended)</span></label>
+                    <label class="upload" for="foodImage" id="uploadBox">
+                        <img id="photoPreview" alt="" hidden>
+                        <span id="uploadText"> Click to add a real photo (JPG, PNG or WEBP, max 4 MB)</span>
+                    </label>
+                    <input id="foodImage" name="foodImage" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+                    <input type="hidden" name="reuseImage" id="reuseImage" value="">
+                </div>
+            </div>
+            <div class="ai-chip" id="safetyChip" hidden></div>
+            <div class="hint-box"> The pincode must match your registered pincode, and the expiry time must be in the future.</div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Post Donation</button></div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-head"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div><h2>NGOs Near You</h2></div>
+        <p class="card-sub">Approved NGOs in pincode <strong style="color:var(--green-700);letter-spacing:2px"><%= hotelPincode %></strong> are notified the moment you post.</p>
+        <div class="radar-box"><div id="coverMap"></div><div class="radar-legend"><span><i style="background:#38bdf8"></i>Your hotel</span><span><i style="background:#60a5fa"></i>NGO nearby</span></div></div>
+        <button class="btn btn-outline btn-sm locate-btn" type="button" id="useHere">Use my current location</button>
+        <div class="map-list" id="ngoList" style="margin-top:12px;max-height:190px">
+            <% if (!nearbyNgos.length) { %><p class="muted small">No approved NGO is registered in this pincode yet.</p><% } %>
+        </div>
+    </div>
+</section>
+
+<section class="card" id="forecast">
+    <div class="section-head">
+        <div><h2><span class="ai-tag">AI</span> Surplus Forecast</h2><p>Learned from when your hotel usually posts surplus food.</p></div>
+    </div>
+    <% if (!forecast.ready) { %>
+        <div class="empty"><div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div><strong>Not enough history yet</strong>Post at least 3 donations and SavoResQ will start predicting your surplus days. (<%= forecast.samples %> so far)</div>
+    <% } else { const mx = Math.max.apply(null, forecast.byDay.map(x => x.count)) || 1; %>
+        <div class="forecast-grid">
+            <div class="wk-bars">
+                <% forecast.byDay.forEach(x => { %><div class="<%= x.day === forecast.day ? 'top' : '' %>"><span><%= x.count %></span><i style="height:<%= Math.max(4, (x.count / mx) * 100) %>%"></i><%= x.day.slice(0, 3) %></div><% }) %>
+            </div>
+            <div class="forecast-card">
+                <small class="muted">NEXT LIKELY SURPLUS</small>
+                <h3><%= forecast.nextLabel %> · <%= forecast.slot %></h3>
+                <p class="small">About <strong><%= forecast.avgPortions %> portions</strong>, based on <%= forecast.samples %> past donations.</p>
+                <div class="conf"><i style="width:<%= forecast.confidence %>%"></i></div>
+                <small class="muted"><%= forecast.confidence %>% confidence</small>
+                <p class="small" style="margin:10px 0 0"> Nearby NGOs can see this heads-up, so they plan pickups before you even post.</p>
+            </div>
+        </div>
+    <% } %>
+</section>
+
+<section class="card" id="history">
+    <div class="section-head">
+        <div>
+            <h2> My Donations</h2>
+            <p>Everything your hotel has posted, newest first.</p>
+        </div>
+        <div class="tabs" id="filterTabs">
+            <button class="tab on" data-f="all" type="button">All <span class="n"><%= totalDonations %></span></button>
+            <button class="tab" data-f="available" type="button">Available <span class="n"><%= available %></span></button>
+            <button class="tab" data-f="accepted" type="button">Accepted <span class="n"><%= accepted %></span></button>
+            <button class="tab" data-f="completed" type="button">Completed <span class="n"><%= completed %></span></button>
+            <button class="tab" data-f="closed" type="button">Expired / Cancelled <span class="n"><%= expired + cancelled %></span></button>
+        </div>
+    </div>
+
+    <% if (!donations || donations.length === 0) { %>
+        <div class="empty">
+            <div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div>
+            <strong>No donations yet</strong>
+            Post your first surplus donation above — it will show up here.
+        </div>
+    <% } else { %>
+        <div class="donation-grid">
+            <% donations.forEach(d => {
+                const st = d.status.toLowerCase();
+                const group = (st === "expired" || st === "cancelled") ? "closed" : st; %>
+                <article class="donation" data-status="<%= group %>">
+                    <div class="food-media">
+                        <%- foodVisual(d.foodName, 64, d.image) %>
+                        <span class="badge <%= st %>"><%= statusIcon[d.status] || "" %> <%= d.status %></span>
+                        <span class="pin">PIN <%= d.pincode %></span>
+                    </div>
+                    <div class="donation-body">
+                        <h3><%= d.foodName %></h3>
+                        <div class="meta-line"> <strong><%= d.quantity %></strong> portions</div>
+                        <div class="meta-line"> Expires <strong><%= fmt(d.expiryTime) %></strong></div>
+                        <% if (d.estimatedValue > 0) { %><div class="meta-line">₹ <strong>₹<%= d.estimatedValue.toLocaleString("en-IN") %></strong> approx. value</div><% } %>
+                        <% if (d.status === "Available" && bestNgo[String(d._id)]) { const b = bestNgo[String(d._id)]; %>
+                            <div class="match-pill" title="<%= b.reasons.join(' · ') %>"><span class="ai-tag">AI</span> Best NGO: <strong><%= b.name %></strong><b><%= b.pct %>%</b></div>
+                        <% } %>
+                        <% if (d.status === "Accepted") { %>
+                            <div class="code-chip">
+                                <span><%= d.pickedUpAt ? "Handover verified" : d.onTheWayAt ? "NGO is on the way" : "Waiting for pickup" %></span>
+                                <% if (!d.pickedUpAt) { %>
+                                    <form class="handover" action="/hotel/donation/<%= d._id %>/handover" method="POST">
+                                        <input name="code" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="Code" required class="code-input" title="4-digit pickup code shown by the NGO team">
+                                        <button class="btn btn-primary btn-sm" type="submit">Verify</button>
+                                    </form>
+                                    <small>Ask the NGO team for their 4-digit pickup code and enter it before handing over the food.</small>
+                                <% } else { %><b>OK</b><% } %>
+                            </div>
+                        <% } %>
+                        <% if (d.acceptedBy) { %>
+                            <div class="note-chip"> Claimed by <%= d.acceptedBy.organizationName || d.acceptedBy.name || "an NGO" %></div>
+                        <% } %>
+                        <div class="donation-actions">
+                            <a class="btn btn-outline btn-sm" href="/hotel/donation/<%= d._id %>">View</a>
+                            <% if (d.acceptedBy) { %><a class="btn btn-outline btn-sm" href="/chat/donation/<%= d._id %>">Message NGO</a><a class="btn btn-outline btn-sm" href="/support?donation=<%= d._id %>&category=Report%20an%20organization">Report</a><% } %>
+                            <% if (d.status === "Completed") { %><a class="btn btn-primary btn-sm" href="/hotel/donation/<%= d._id %>/certificate"> Certificate</a><% } %>
+                            <% if (d.status === "Available") { %>
+                                <a class="btn btn-outline btn-sm" href="/hotel/donation/<%= d._id %>/edit">Edit</a>
+                                <form class="inline-form" action="/hotel/donation/<%= d._id %>/cancel" method="POST" onsubmit="return confirm('Cancel this donation?')">
+                                    <button class="btn btn-danger-outline btn-sm" type="submit">Cancel</button>
+                                </form>
+                            <% } %>
+                        </div>
+                    </div>
+                </article>
+            <% }) %>
+        </div>
+    <% } %>
+</section>
+
+<script>
+(function () {
+    // only allow future expiry times in the form
+    var exp = document.getElementById("expiryTime");
+    if (exp) {
+        var now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+        exp.min = now.toISOString().slice(0, 16);
+    }
+    // photo preview
+    var input = document.getElementById("foodImage");
+    input.addEventListener("change", function () {
+        var f = input.files[0], img = document.getElementById("photoPreview"), txt = document.getElementById("uploadText");
+        if (!f) { img.hidden = true; txt.textContent = " Click to add a real photo (JPG, PNG or WEBP, max 4 MB)"; return; }
+        if (f.size > 4 * 1024 * 1024) { alert("Please choose a photo under 4 MB."); input.value = ""; return; }
+        img.src = URL.createObjectURL(f); img.hidden = false; txt.textContent = f.name + " — click to change";
+    });
+    // history filter tabs
+    var tabs = document.querySelectorAll("#filterTabs .tab"), cards = document.querySelectorAll(".donation[data-status]");
+    tabs.forEach(function (t) {
+        t.addEventListener("click", function () {
+            tabs.forEach(function (x) { x.classList.remove("on"); });
+            t.classList.add("on");
+            cards.forEach(function (c) { c.style.display = (t.dataset.f === "all" || c.dataset.status === t.dataset.f) ? "" : "none"; });
+        });
+    });
+})();
+</script>
+
+
+<%- include('partials/heroes', { heroes: heroes, meId: currentUser.id }) %>
+<script src="/js/geo.js"></script>
+<script src="/js/radar.js"></script>
+<script>
+(function () {
+    var ME = <%- JSON.stringify({ address: me.address, city: me.city, state: me.state, pincode: me.pincode, name: me.organizationName, loc: (me.location && me.location.lat != null) ? me.location : null }) %>;
+    var NGOS = <%- JSON.stringify(nearbyNgos.map(n => ({ name: n.organizationName || n.name, phone: n.phone, address: n.address, city: n.city, state: n.state, pincode: n.pincode, loc: (n.location && n.location.lat != null) ? n.location : null }))).replace(/</g, "\\u003c") %>;
+    var el = document.getElementById("coverMap"), list = document.getElementById("ngoList");
+    if (!el) return;
+    function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : t; return d.innerHTML; }
+    var me = null;
+    function draw() {
+        if (!me) return;
+        var rows = NGOS.filter(function (n) { return n.pos; });
+        rows.forEach(function (n) { n.km = Geo.km(me, n.pos); });
+        rows.sort(function (a, b) { return a.km - b.km; });
+        RescueRadar.draw(el, { you: me, youLabel: "Your hotel", route: false, items: rows.map(function (n, i) { return { id: "n" + i, label: n.name, qty: "", sub: Geo.fmtKm(n.km) + " " + RescueRadar.compass(Geo.bearing(me, n.pos)), mins: 999, pos: n.pos }; }) });
+        list.innerHTML = "";
+        rows.forEach(function (n) {
+            var row = document.createElement("div"); row.className = "map-item";
+            row.innerHTML = "<div class='map-dot'></div><div><strong>" + esc(n.name) + "</strong><div class='muted small'>" + esc(n.city) + (n.phone ? " · " + esc(n.phone) : "") + "</div></div><span class='dist'>" + Geo.fmtKm(n.km) + "</span>";
+            list.appendChild(row);
+        });
+    }
+    (async function () {
+        me = ME.loc ? { lat: ME.loc.lat, lng: ME.loc.lng, precise: true } : await Geo.locate(ME);
+        if (me && me.precise && !ME.loc) Geo.saveMine(me);
+        for (var i = 0; i < NGOS.length; i++) { var n = NGOS[i], raw = n.loc ? { lat: n.loc.lat, lng: n.loc.lng, precise: true } : await Geo.locate(n); n.pos = Geo.spread(raw, n.name); }
+        draw();
+    })();
+    var btn = document.getElementById("useHere");
+    if (btn) btn.addEventListener("click", async function () {
+        btn.disabled = true; btn.textContent = "Locating…";
+        var p = await Geo.here();
+        btn.disabled = false; btn.textContent = "Use my current location";
+        if (!p) { alert("Could not get your location. Please allow location access in the browser."); return; }
+        me = p; Geo.saveMine(p); draw();
+    });
+})();
+</script>
+
+
+<script>
+(function () {
+    var MEM = <%- JSON.stringify(foodMemory.map(m => ({ k: m.name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(), name: m.name, image: m.image, qty: m.lastQty }))).replace(/</g, "\\u003c") %>;
+    var name = document.getElementById("foodName"), qty = document.getElementById("quantity"), box = document.getElementById("foodPreview"), cap = document.getElementById("foodPreviewCap"), reuse = document.getElementById("reuseImage"), file = document.getElementById("foodImage"), timer;
+    function norm(t) { return String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+    function show() {
+        var n = name.value.trim(); if (!n) { box.innerHTML = ""; cap.textContent = "Type a food name — its picture appears here."; reuse.value = ""; return; }
+        var mem = MEM.filter(function (m) { return m.k === norm(n); })[0];
+        fetch("/food-visual?name=" + encodeURIComponent(n)).then(function (r) { return r.json(); }).then(function (v) {
+            if (name.value.trim() !== n) return;
+            box.innerHTML = v.html;
+            if (mem && mem.image && !file.files.length) {
+                box.insertAdjacentHTML("beforeend", '<img src="/uploads/donations/' + encodeURIComponent(mem.image) + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.remove()">');
+                reuse.value = mem.image; cap.innerHTML = "<b>Remembered:</b> your own photo of " + mem.name + " from last time (it will be reused).";
+            } else {
+                reuse.value = ""; cap.innerHTML = "Matched as <b>" + v.label + "</b> — " + (v.hasPhoto ? "stock photo from this app." : "illustration (add your own photo below for a real picture).");
+            }
+        }).catch(function () {});
+    }
+    name.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(show, 150); });
+    file.addEventListener("change", function () { if (file.files.length) { reuse.value = ""; cap.innerHTML = "Using the photo you just chose."; } });
+    document.querySelectorAll(".mem-chip").forEach(function (c) {
+        c.addEventListener("click", function () {
+            name.value = c.dataset.name; if (qty) qty.value = c.dataset.qty;
+            name.dispatchEvent(new Event("input")); name.scrollIntoView({ block: "center", behavior: "smooth" });
+        });
+    });
+    show();
+})();
+</script>
+
+<script>
+(function () {
+    var RULES = <%- JSON.stringify(safetyRules.map(r => ({ label: r.label, hours: r.hours, tip: r.tip, words: r.words }))) %>;
+    var name = document.getElementById("foodName"), exp = document.getElementById("expiryTime"), chip = document.getElementById("safetyChip"), touched = false;
+    exp.addEventListener("input", function () { touched = true; check(); });
+    function rule() {
+        var t = name.value.toLowerCase().trim(); if (!t) return null;
+        for (var i = 0; i < RULES.length; i++) for (var j = 0; j < RULES[i].words.length; j++) if (t.indexOf(RULES[i].words[j]) > -1) return RULES[i];
+        return { label: "Prepared food", hours: 4, tip: "When unsure, choose the shorter time." };
+    }
+    function local(d) { return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
+    function check() {
+        var r = rule(); if (!r) { chip.hidden = true; return; }
+        chip.hidden = false; chip.className = "ai-chip";
+        var limit = new Date(Date.now() + r.hours * 3600e3), html = '<span></span><div><span class="ai-tag">AI</span><b>' + r.label + '</b> stay safe for about <b>' + r.hours + ' h</b>. ' + r.tip;
+        if (exp.value && new Date(exp.value) > limit) { chip.className = "ai-chip warn"; html += '<br> The time you chose is longer than recommended. <a href="#" id="fixTime">Use ' + limit.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) + '</a>'; }
+        chip.innerHTML = html + "</div>";
+        var fix = document.getElementById("fixTime"); if (fix) fix.onclick = function (e) { e.preventDefault(); exp.value = local(limit); touched = true; check(); };
+    }
+    name.addEventListener("input", function () { var r = rule(); if (r && !touched) exp.value = local(new Date(Date.now() + r.hours * 3600e3)); check(); });
+})();
+</script>
+
+<%- include('partials/shell-end') %>

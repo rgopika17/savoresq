@@ -1,0 +1,39 @@
+<%- include('partials/shell-start', { title: 'Donation Certificate', subtitle: 'A printable thank-you for a completed rescue.', active: 'history' }) %>
+
+<%
+    const hotel = donation.hotelId || {}, ngo = donation.acceptedBy || {};
+    const hotelName = hotel.organizationName || hotel.name || "Hotel";
+    const ngoName = ngo.organizationName || ngo.name || "NGO";
+    const when = new Date(donation.updatedAt || donation.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+%>
+
+<div class="form-actions no-print" style="margin:0 0 16px">
+    <button class="btn btn-primary" type="button" onclick="window.print()"> Print / Save as PDF</button>
+    <a class="btn btn-outline" href="/hotel#history">← Back to donations</a>
+</div>
+
+<section class="certificate">
+    <div class="cert-inner">
+        <div class="cert-brand"> SavoResQ</div>
+        <div class="cert-kicker">CERTIFICATE OF FOOD RESCUE</div>
+        <p class="cert-small">This is proudly presented to</p>
+        <h2 class="cert-name"><%= hotelName %></h2>
+        <p class="cert-text">
+            for donating <strong><%= donation.quantity %> portions of <%= donation.foodName %></strong>
+            which was safely collected by <strong><%= ngoName %></strong> and served to people in need.
+        </p>
+        <div class="cert-stats">
+            <div><b><%= donation.quantity %></b><span>Meals rescued</span></div>
+            <% if (donation.estimatedValue > 0) { %><div><b>₹<%= donation.estimatedValue.toLocaleString("en-IN") %></b><span>Approx. value</span></div><% } %>
+            <div><b><%= donation.pincode %></b><span>Area pincode</span></div>
+        </div>
+        <div class="cert-foot">
+            <span>Date: <strong><%= when %></strong></span>
+            <span>Ref: <strong><%= ref %></strong></span>
+        </div>
+        <p class="cert-verify">Verify this certificate at <strong><%= verifyUrl %></strong></p>
+        <p class="cert-small" style="margin-top:14px">Thank you for choosing rescue over waste. </p>
+    </div>
+</section>
+
+<%- include('partials/shell-end') %>

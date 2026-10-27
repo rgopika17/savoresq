@@ -1,0 +1,33 @@
+<%- include('partials/shell-start', { title: 'Deletion Requests', subtitle: 'Organizations asking to close their SavoResQ account.', active: 'deletions' }) %>
+
+<% if (!deletionRequests.length) { %>
+    <div class="empty"><div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div><strong>No deletion requests</strong>Nothing is waiting for your decision.</div>
+<% } else { %>
+    <div class="org-grid">
+        <% deletionRequests.forEach(u => { %>
+            <article class="org-card">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span class="badge <%= u.role === 'hotel' ? 'info' : 'available' %>"><%= u.role.toUpperCase() %></span>
+                    <span class="badge pending">Deletion requested</span>
+                </div>
+                <h3><%= u.organizationName || u.name %></h3>
+                <div class="lines">
+                    <div> <strong><%= u.name %></strong> · <%= u.email %></div>
+                    <div> PIN <%= u.pincode %></div>
+                    <div> Requested <strong><%= u.deletionRequestedAt ? new Date(u.deletionRequestedAt).toLocaleString() : "—" %></strong></div>
+                    <div> Reason: <strong><%= u.deletionReason || "Not provided" %></strong></div>
+                </div>
+                <div class="row-actions">
+                    <form class="inline-form" method="POST" action="/admin/deletion/<%= u._id %>/approve" onsubmit="return confirm('Permanently approve deletion of this account?')">
+                        <button class="btn btn-danger btn-sm" type="submit">Approve deletion</button>
+                    </form>
+                    <form class="inline-form" method="POST" action="/admin/deletion/<%= u._id %>/reject">
+                        <button class="btn btn-outline btn-sm" type="submit">Keep account</button>
+                    </form>
+                </div>
+            </article>
+        <% }) %>
+    </div>
+<% } %>
+
+<%- include('partials/shell-end') %>

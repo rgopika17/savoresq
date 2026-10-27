@@ -1,0 +1,54 @@
+<%- include('partials/shell-start', { title: 'Contact Admin', subtitle: 'Report a problem or fraud privately to the SavoResQ admin.', active: 'support' }) %>
+
+<%
+    const stClass = { "Open": "pending", "In Progress": "accepted", "Resolved": "completed" };
+    const ago = (d) => new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    const other = role === "hotel" ? "NGO" : "hotel";
+    const nm = (u) => u ? (u.organizationName || u.name) : "—";
+%>
+
+<section class="grid-2" style="grid-template-columns:1.1fr 1fr;align-items:start">
+    <div class="card">
+        <div class="card-head"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></div><h2>Contact the admin</h2></div>
+        <p class="card-sub">Report fraud or misconduct, an unresolved food complaint, or a problem with the app. Only the admin can read this. To talk to the <%= other %> directly, use <a href="/chat" style="font-weight:700">Messages</a>.</p>
+        <form action="/support" method="POST">
+            <div class="form-grid">
+                <div class="field full">
+                    <label for="donationId">Related donation <span class="muted">(optional)</span></label>
+                    <select id="donationId" name="donationId">
+                        <option value="">Not about a specific donation</option>
+                        <% contacts.forEach(c => { %><option value="<%= c.id %>" <%= c.id === prefillDonation ? "selected" : "" %>><%= c.label %></option><% }) %>
+                    </select>
+                </div>
+                <div class="field full">
+                    <label for="category">Topic</label>
+                    <select id="category" name="category" required>
+                        <option value="">Choose a topic…</option>
+                        <% adminTopics.forEach(t => { %><option <%= t === topic ? "selected" : "" %>><%= t %></option><% }) %>
+                    </select>
+                </div>
+                <div class="field full"><label for="subject">Subject <span class="muted">(optional)</span></label><input id="subject" name="subject" maxlength="120" placeholder="Short title"></div>
+                <div class="field full"><label for="message">Message</label><textarea id="message" name="message" rows="5" maxlength="2000" placeholder="What happened? Include names, times or amounts if it helps." required minlength="5"></textarea></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Send to admin</button></div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-head"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="m3 7 9 7 9-7"/></svg></div><h2>My requests to admin</h2></div>
+        <% if (!tickets.length) { %><div class="empty"><strong>No requests yet</strong>Your conversations with the admin appear here.</div><% } %>
+        <div class="fc-list">
+        <% tickets.forEach(t => { %>
+            <a class="fc-row" href="/support/<%= t._id %>" style="text-decoration:none;color:inherit">
+                <div>
+                    <strong><%= t.subject %><% if (t.unreadForUser) { %> <span class="badge pending">New reply</span><% } %></strong>
+                    <small><%= t.category %> · <%= ago(t.updatedAt) %></small>
+                </div>
+                <span class="badge <%= stClass[t.status] %>"><%= t.status %></span>
+            </a>
+        <% }) %>
+        </div>
+    </div>
+</section>
+
+<%- include('partials/shell-end') %>

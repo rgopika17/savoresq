@@ -1,0 +1,29 @@
+<%- include('partials/shell-start', { title: 'Edit Donation', subtitle: 'Update an available donation.', active: 'history' }) %>
+
+<section class="card" style="max-width:720px">
+    <div class="card-head"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div><h2>Edit food donation</h2></div>
+    <p class="card-sub">Only donations that are still available can be edited.</p>
+
+    <form action="/hotel/donation/<%= donation._id %>/edit" method="POST" enctype="multipart/form-data">
+        <div class="form-grid">
+            <div class="field full"><label>Food name</label><input type="text" name="foodName" value="<%= donation.foodName %>" maxlength="80" required></div>
+            <div class="field"><label>Quantity (portions)</label><input type="number" name="quantity" min="1" value="<%= donation.quantity %>" required></div>
+            <div class="field"><label>Pincode</label><input type="text" name="pincode" maxlength="6" pattern="[0-9]{6}" value="<%= donation.pincode %>" required></div>
+            <div class="field full"><label>Expiry date &amp; time</label><input type="datetime-local" name="expiryTime" value="<%= new Date(new Date(donation.expiryTime).getTime() - new Date(donation.expiryTime).getTimezoneOffset() * 60000).toISOString().slice(0,16) %>" required></div>
+            <div class="field full"><label>Approx. value in ₹ <span class="muted">(optional)</span></label><input type="number" name="estimatedValue" min="0" max="10000000" value="<%= donation.estimatedValue || '' %>"></div>
+            <div class="field full">
+                <label for="foodImage">Photo of the food</label>
+                <div class="food-media" style="height:170px;border-radius:12px"><%- foodVisual(donation.foodName, 64, donation.image) %></div>
+                <input id="foodImage" name="foodImage" type="file" accept="image/jpeg,image/png,image/webp">
+                <span class="help">Choose a new photo to replace the current one (max 4 MB).</span>
+                <% if (donation.image) { %><label style="display:flex;gap:8px;font-weight:600"><input type="checkbox" name="removeImage" value="1" style="width:auto"> Remove my photo</label><% } %>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Save changes</button>
+            <a class="btn btn-outline" href="/hotel#history">Cancel</a>
+        </div>
+    </form>
+</section>
+
+<%- include('partials/shell-end') %>

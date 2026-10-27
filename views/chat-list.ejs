@@ -1,0 +1,26 @@
+<%- include('partials/shell-start', { title: 'Messages', subtitle: isHotel ? 'Chat with the NGOs that claimed your food.' : 'Chat with the hotels whose food you claimed.', active: 'chat' }) %>
+
+<%
+    const when = (d) => new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    const unread = (c) => isHotel ? c.unreadForHotel : c.unreadForNgo;
+%>
+
+<section class="card">
+    <div class="section-head">
+        <div><h2>Conversations</h2><p>One private chat per donation. Start one from <%= isHotel ? "My Donations" : "My Rescues" %> using the Message button.</p></div>
+    </div>
+    <% if (!chats.length) { %>
+        <div class="empty"><strong>No conversations yet</strong>Once a donation is accepted, either side can start a chat about pickup, timing or food quality.</div>
+    <% } else { chats.forEach(c => { const other = isHotel ? c.ngoId : c.hotelId; const last = c.messages[c.messages.length - 1]; %>
+        <a class="fc-row" href="/chat/<%= c._id %>" style="text-decoration:none;color:inherit">
+            <div class="map-dot"></div>
+            <div>
+                <strong><%= other ? (other.organizationName || other.name) : "Organization" %> <span class="muted small">· <%= c.donationId ? c.donationId.foodName : "Donation" %></span><% if (unread(c)) { %> <span class="nav-count" style="position:static;display:inline-block;margin-left:6px">New</span><% } %></strong>
+                <small><%= last ? (last.from === (isHotel ? "hotel" : "ngo") ? "You: " : "") + last.text.slice(0, 80) : "No messages yet" %></small>
+            </div>
+            <b class="muted small"><%= last ? when(last.at) : "" %></b>
+        </a>
+    <% }) } %>
+</section>
+
+<%- include('partials/shell-end') %>

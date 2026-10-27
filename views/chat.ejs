@@ -1,0 +1,45 @@
+<%- include('partials/shell-start', { title: 'Messages', subtitle: chat.donationId.foodName + ' · ' + chat.donationId.quantity + ' portions', active: 'chat' }) %>
+
+<%
+    const me = isHotel ? "hotel" : "ngo";
+    const other = isHotel ? chat.ngoId : chat.hotelId;
+    const otherName = other.organizationName || other.name;
+    const when = (d) => new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    const quick = isHotel
+        ? ["Food is packed and ready.", "Please come before the safe-until time.", "Our staff is at the main gate."]
+        : ["We are on our way.", "The food was not in good condition. Please check.", "Quantity received was less than posted.", "Thank you, food received!"];
+%>
+
+<div class="form-actions no-print" style="margin:0 0 16px">
+    <a class="btn btn-outline" href="/chat">← All messages</a>
+    <a class="btn btn-outline" href="/support?donation=<%= chat.donationId._id %>&category=<%= isHotel ? 'Report%20an%20organization' : 'Fraud%20or%20misconduct' %>">Report to admin</a>
+</div>
+
+<section class="card">
+    <div class="section-head">
+        <div><h2><%= otherName %></h2><p><%= chat.donationId.foodName %> · <%= chat.donationId.status %><% if (other.phone) { %> · <%= other.phone %><% } %></p></div>
+    </div>
+
+    <div class="thread">
+        <% if (!chat.messages.length) { %><p class="muted">No messages yet. Say hello or use a quick reply below.</p><% } %>
+        <% chat.messages.forEach(m => { const mine = m.from === me; %>
+            <div class="msg <%= mine ? 'mine' : 'theirs' %>">
+                <div class="who"><%= mine ? "You" : otherName %> · <%= when(m.at) %></div>
+                <div class="bubble"><%= m.text %></div>
+            </div>
+        <% }) %>
+    </div>
+
+    <div class="quick">
+        <% quick.forEach(q => { %><button type="button" class="chipbtn" data-q="<%= q %>"><%= q %></button><% }) %>
+    </div>
+    <form action="/chat/<%= chat._id %>/send" method="POST" class="reply-form">
+        <textarea id="msgBox" name="message" rows="3" maxlength="1000" placeholder="Write a message…" required></textarea>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Send</button></div>
+    </form>
+</section>
+
+<script>
+document.querySelectorAll(".chipbtn").forEach(function (b) { b.onclick = function () { var t = document.getElementById("msgBox"); t.value = b.dataset.q; t.focus(); }; });
+</script>
+<%- include('partials/shell-end') %>

@@ -1,0 +1,44 @@
+<%- include('partials/shell-start', { title: 'Donation Details', subtitle: 'Everything about this donation.', active: 'history' }) %>
+
+<section class="card" style="max-width:820px">
+    <div class="section-head">
+        <div><h2> <%= donation.foodName %></h2><p>Posted <%= donation.createdAt ? new Date(donation.createdAt).toLocaleString() : "-" %></p></div>
+        <span class="badge <%= donation.status.toLowerCase() %>"><%= donation.status %></span>
+    </div>
+
+    <div class="food-media" style="height:220px;border-radius:14px;margin-bottom:18px"><%- foodVisual(donation.foodName, 90, donation.image) %></div>
+
+    <div class="kv">
+        <div><small>Quantity</small><strong><%= donation.quantity %> portions</strong></div>
+        <div><small>Pincode</small><strong><%= donation.pincode %></strong></div>
+        <% if (donation.estimatedValue > 0) { %><div><small>Approx. value</small><strong>₹<%= donation.estimatedValue.toLocaleString("en-IN") %></strong></div><% } %>
+        <div><small>Expiry time</small><strong><%= new Date(donation.expiryTime).toLocaleString() %></strong></div>
+    </div>
+
+    <% if (donation.acceptedBy) { %>
+        <div class="modal-section">
+            <h3> Accepted by NGO</h3>
+            <div class="kv">
+                <div><small>Organization</small><strong><%= donation.acceptedBy.organizationName || "-" %></strong></div>
+                <div><small>Contact person</small><strong><%= donation.acceptedBy.name || "-" %></strong></div>
+                <div><small>Email</small><strong><%= donation.acceptedBy.email || "-" %></strong></div>
+                <div><small>Phone</small><strong><%= donation.acceptedBy.phone || "-" %></strong></div>
+            </div>
+        </div>
+    <% } %>
+
+    <div class="form-actions">
+        <a class="btn btn-outline" href="/hotel#history">← Back to donations</a>
+        <% if (donation.status === "Completed") { %>
+            <a class="btn btn-primary" href="/hotel/donation/<%= donation._id %>/certificate"> View certificate</a>
+        <% } %>
+        <% if (donation.status === "Available") { %>
+            <a class="btn btn-primary" href="/hotel/donation/<%= donation._id %>/edit">Edit</a>
+            <form class="inline-form" method="POST" action="/hotel/donation/<%= donation._id %>/cancel" onsubmit="return confirm('Cancel this donation?')">
+                <button class="btn btn-danger-outline" type="submit">Cancel donation</button>
+            </form>
+        <% } %>
+    </div>
+</section>
+
+<%- include('partials/shell-end') %>

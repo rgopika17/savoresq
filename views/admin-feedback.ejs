@@ -1,0 +1,32 @@
+<%- include('partials/shell-start', { title: 'Feedback & Ratings', subtitle: 'Food-quality feedback submitted by NGOs.', active: 'feedback' }) %>
+
+<section class="stats">
+    <div class="stat"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></div><div><b><%= feedbacks.length %></b><span>Total feedback</span></div></div>
+    <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></div><div><b><%= averageRating %> / 5</b><span>Average rating</span></div></div>
+</section>
+
+<section class="card">
+    <% if (feedbacks.length === 0) { %>
+        <div class="empty"><div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></div><strong>No feedback yet</strong>It will appear here once NGOs review completed rescues.</div>
+    <% } else { %>
+        <div class="table-wrap">
+            <table class="table">
+                <thead><tr><th>Food</th><th>Hotel</th><th>NGO</th><th>Rating</th><th>Feedback</th><th>Date</th></tr></thead>
+                <tbody>
+                <% feedbacks.forEach(item => { const r = Number(item.rating) || 0; %>
+                    <tr>
+                        <td><strong><%= item.foodName %></strong><br><span class="muted small">Qty: <%= item.donationId?.quantity || "—" %></span></td>
+                        <td><%= item.hotelId?.organizationName || item.hotelId?.name || "Hotel" %><br><span class="muted small">PIN <%= item.hotelId?.pincode || "—" %></span></td>
+                        <td><%= item.ngoId?.organizationName || item.ngoId?.name || "NGO" %><br><span class="muted small">PIN <%= item.ngoId?.pincode || "—" %></span></td>
+                        <td class="nowrap"><span class="stars"><%= "★".repeat(r) %><i><%= "★".repeat(5 - r) %></i></span></td>
+                        <td style="min-width:240px"><%= item.feedback %></td>
+                        <td class="muted small nowrap"><%= new Date(item.createdAt).toLocaleDateString("en-IN") %></td>
+                    </tr>
+                <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</section>
+
+<%- include('partials/shell-end') %>

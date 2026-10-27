@@ -1,0 +1,90 @@
+<%- include('partials/shell-start', { title: 'Settings', subtitle: 'Security and account preferences.', active: 'settings' }) %>
+
+<%
+    const isAdmin = user.role === "admin";
+    const closing = user.accountStatus === "Deletion Requested";
+%>
+
+<div class="settings-layout">
+
+    <section class="card">
+        <div class="card-head"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.2 8 8 9 4.8-1 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div><h2>Account overview</h2></div>
+        <p class="card-sub">Your sign-in email and current standing.</p>
+        <div class="kv">
+            <div><small>Signed in as</small><strong><%= user.email %></strong></div>
+            <div><small>Account type</small><strong><%= isAdmin ? "ADMINISTRATOR" : user.role.toUpperCase() %></strong></div>
+            <div><small>Verification</small><strong><span class="badge <%= user.approvalStatus === 'Approved' ? 'approved' : user.approvalStatus === 'Rejected' ? 'rejected' : 'pending' %>"><%= user.approvalStatus %></span></strong></div>
+            <div><small>Account status</small><strong><span class="badge <%= user.accountStatus === 'Active' ? 'active' : 'pending' %>"><%= user.accountStatus %></span></strong></div>
+        </div>
+        <% if (!isAdmin) { %>
+            <div class="form-actions">
+                <a class="btn btn-outline" href="/account/profile/edit">View / edit organization profile →</a>
+            </div>
+            <% if (pendingProfileUpdate) { %>
+                <div class="hint-box warn"> A profile update is waiting for admin review.</div>
+            <% } %>
+        <% } %>
+    </section>
+
+    <section class="card">
+        <div class="card-head"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3"/></svg></div><h2>Change password</h2></div>
+        <p class="card-sub">Use at least 8 characters. You will stay signed in on this device.</p>
+        <form action="/account/password" method="POST">
+            <div class="form-grid">
+                <div class="field full"><label for="currentPassword">Current password</label><input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required></div>
+                <div class="field"><label for="newPassword">New password</label><input id="newPassword" name="newPassword" type="password" minlength="8" autocomplete="new-password" required></div>
+                <div class="field"><label for="confirmPassword">Confirm new password</label><input id="confirmPassword" name="confirmPassword" type="password" minlength="8" autocomplete="new-password" required></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Update Password</button></div>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="card-head"><div class="stat-ico slate"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></div><h2>Sign out</h2></div>
+        <p class="card-sub">End your session on this device.</p>
+        <a class="btn btn-outline" href="/logout">Logout</a>
+    </section>
+
+    <% if (!isAdmin) { %>
+        <% if (closing) { %>
+            <section class="card">
+                <div class="card-head"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h2>Deletion request under review</h2></div>
+                <p class="card-sub">The admin is reviewing your request. Your account stays as is until a decision is made.</p>
+            </section>
+        <% } else if (user.accountStatus !== "Deleted") { %>
+            <section class="card danger-zone">
+                <div class="card-head"><div class="stat-ico red"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div><h2>Delete account</h2></div>
+                <p class="card-sub">Request permanent removal of your organization. This needs admin approval and can’t be undone afterwards. Anonymous donation records may be kept for reporting.</p>
+                <button class="btn btn-danger-outline" type="button" id="showDelete">Request account deletion</button>
+
+                <form id="deleteForm" class="hidden" action="/account/delete-request" method="POST" onsubmit="return confirmDeletion()">
+                    <h3 style="margin:18px 0 4px">Why are you leaving?</h3>
+                    <div class="reason-list">
+                        <% ["I no longer need SavoResQ", "My organization is no longer participating", "Privacy concern", "Facing a problem", "I have a suggestion", "Other"].forEach((r, i) => { %>
+                            <label><input type="radio" name="deletionReason" value="<%= r %>" <%= i === 0 ? "required" : "" %>> <%= r %></label>
+                        <% }) %>
+                    </div>
+                    <div class="field">
+                        <label for="confirmation">Type <strong>DELETE</strong> to confirm</label>
+                        <input id="confirmation" name="confirmation" autocomplete="off" placeholder="DELETE" required>
+                    </div>
+                    <label style="display:flex;gap:10px;margin:14px 0;font-size:14px"><input type="checkbox" id="understand" required> I understand this can’t be undone after admin approval.</label>
+                    <button class="btn btn-danger" type="submit">Submit deletion request</button>
+                </form>
+            </section>
+        <% } %>
+    <% } %>
+</div>
+
+<script>
+document.getElementById("showDelete") && document.getElementById("showDelete").addEventListener("click", function () {
+    this.classList.add("hidden");
+    var f = document.getElementById("deleteForm"); f.classList.remove("hidden"); f.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+function confirmDeletion() {
+    if (document.getElementById("confirmation").value.trim() !== "DELETE") { alert("Please type DELETE exactly."); return false; }
+    return confirm("Submit your account for permanent deletion?");
+}
+</script>
+
+<%- include('partials/shell-end') %>

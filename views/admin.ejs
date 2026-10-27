@@ -1,0 +1,87 @@
+<%- include('partials/shell-start', { title: 'Admin Dashboard', subtitle: 'Platform statistics at a glance.', active: 'dashboard' }) %>
+
+<%
+    const total = totalDonations || 0;
+    const pct = (n) => total ? Math.round((n / total) * 100) : 0;
+    const successRate = pct(completedDonations);
+    const parts = [
+        ["available", "Available", availableDonations],
+        ["accepted",  "Accepted",  acceptedDonations],
+        ["completed", "Completed", completedDonations],
+        ["expired",   "Expired",   expiredDonations],
+        ["cancelled", "Cancelled", cancelledDonations]
+    ];
+%>
+
+<section class="hero">
+    <h2>Verify. Manage. Support the mission. </h2>
+    <p>Review trusted Hotels and NGOs, monitor food-rescue activity and keep the platform safe and effective.</p>
+</section>
+
+<section class="stats">
+    <div class="stat"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.6 5.2"/></svg></div><div><b><%= users.length %></b><span>Total Users</span></div></div>
+    <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5l8-2v18M12 9h8v12M8 9h1M8 13h1M8 17h1M15 13h2M15 17h2M3 21h18"/></svg></div><div><b><%= hotels.length %></b><span>Hotels</span></div></div>
+    <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.6 5.2"/></svg></div><div><b><%= ngos.length %></b><span>NGOs</span></div></div>
+    <div class="stat"><div class="stat-ico purple"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div><div><b><%= totalDonations %></b><span>Total Donations</span></div></div>
+</section>
+
+<section class="attention">
+    <a href="/admin/verifications"><span class="stat-ico amber"></span> Pending approvals <em class="<%= pendingApprovals ? 'hot' : '' %>"><%= pendingApprovals %></em></a>
+    <a href="/admin/profile-updates"><span class="stat-ico blue"></span> Profile updates <em class="<%= profileUpdates ? 'hot' : '' %>"><%= profileUpdates %></em></a>
+    <a href="/admin/requests"><span class="stat-ico red"></span> Deletion requests <em class="<%= deletionRequests.length ? 'hot' : '' %>"><%= deletionRequests.length %></em></a>
+</section>
+
+<section class="card">
+    <div class="section-head">
+        <div><h2> Donation Statistics</h2><p>Platform-wide donation lifecycle and rescue performance.</p></div>
+    </div>
+
+    <div class="grid-2" style="grid-template-columns:1.5fr 1fr;gap:34px">
+        <div>
+            <strong class="small muted" style="letter-spacing:.8px;text-transform:uppercase">Donations by status</strong>
+            <div class="stack-bar" style="margin-top:10px">
+                <% parts.forEach(p => { if (p[2]) { %><span class="c-<%= p[0] %>" style="width:<%= (p[2] / total) * 100 %>%" title="<%= p[1] %>: <%= p[2] %>"></span><% } }) %>
+            </div>
+            <div class="legend">
+                <% parts.forEach(p => { %><div><i class="c-<%= p[0] %>"></i><%= p[1] %><b><%= p[2] %></b></div><% }) %>
+                <div><i style="background:#15231c"></i>Total<b><%= total %></b></div>
+            </div>
+        </div>
+
+        <div class="donut-wrap">
+            <div class="donut" style="--p:<%= successRate %>"><div><span><b><%= successRate %>%</b><small>RESCUED</small></span></div></div>
+            <div>
+                <strong>Rescue success rate</strong>
+                <p class="muted small">Completed donations out of everything posted.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats" style="margin-top:26px">
+        <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div><div><b><%= totalQuantity %></b><span>Total portions posted</span></div></div>
+        <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"/></svg></div><div><b><%= rescuedQuantity %></b><span>Portions rescued</span></div></div>
+        <div class="stat"><div class="stat-ico purple">₹</div><div><b>₹<%= (valueRescued || 0).toLocaleString("en-IN") %></b><span>Est. value rescued</span></div></div>
+        <div class="stat"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></div><div><b><%= averageRating %> / 5</b><span>Avg. food rating (<%= feedbackCount %>)</span></div></div>
+    </div>
+</section>
+
+<section class="impact-strip">
+    <div class="lead"> Platform impact<small>Estimates from all completed rescues</small></div>
+    <div class="i"><b><%= impact.kg.toLocaleString("en-IN") %> kg</b><span>food rescued</span></div>
+    <div class="i"><b><%= impact.co2.toLocaleString("en-IN") %> kg</b><span>CO₂ avoided</span></div>
+    <div class="i"><b><%= impact.carKm.toLocaleString("en-IN") %> km</b><span>car driving equivalent</span></div>
+</section>
+
+<section class="card">
+    <div class="section-head"><div><h2><span class="ai-tag">AI</span> Area Insights</h2><p>Busiest pincodes by food posted. Red flags show areas that have hotels but no NGO to collect the food.</p></div></div>
+    <% if (!areas.length) { %><p class="muted">Area data appears once donations are posted.</p><% } %>
+    <% const top = Math.max.apply(null, areas.map(a => a.posted).concat([1])); areas.forEach(a => { %>
+        <div class="area-row">
+            <strong><%= a.pin %></strong>
+            <div class="area-bar" title="<%= a.rescued %> of <%= a.posted %> portions rescued"><i class="p" style="width:<%= (a.posted / top) * 100 %>%"></i><i style="width:<%= (a.rescued / top) * 100 %>%"></i></div>
+            <% if (a.gap) { %><span class="flag"> No NGO here</span><% } else { %><span class="ok"><%= a.rescued %>/<%= a.posted %> · <%= a.rate %>% rescued</span><% } %>
+        </div>
+    <% }) %>
+</section>
+
+<%- include('partials/shell-end') %>

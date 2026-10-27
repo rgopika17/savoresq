@@ -1,0 +1,70 @@
+<%- include('partials/shell-start', { title: 'Conversation', subtitle: ticket.subject, active: 'support' }) %>
+
+<%
+    const stClass = { "Open": "pending", "In Progress": "accepted", "Resolved": "completed" };
+    const when = (d) => new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    const isAdmin = mode === "admin";
+    const nm = (u) => u ? (u.organizationName || u.name) : "Deleted user";
+    const idOf = (u) => String(u && u._id ? u._id : u);
+    const partner = ticket.kind === "partner";
+    const starter = ticket.userId, other = ticket.partnerId;
+    const authorName = (m) => {
+        if (m.from === "admin") return "SavoResQ Admin";
+        const who = (m.by && other && idOf(m.by) === idOf(other)) ? other : starter;
+        return !isAdmin && idOf(who) === meId ? "You" : nm(who);
+    };
+    const isMine = (m) => isAdmin ? m.from === "admin" : (m.from === "user" && (!m.by || String(m.by) === meId));
+    const withName = isAdmin ? null : (partner ? nm(idOf(starter) === meId ? other : starter) : "SavoResQ Admin");
+    const back = isAdmin ? "/admin/support" : "/support";
+    const action = isAdmin ? "/admin/support/" + ticket._id + "/reply" : "/support/" + ticket._id + "/reply";
+%>
+
+<div class="form-actions no-print" style="margin:0 0 16px"><a class="btn btn-outline" href="<%= back %>">← Back</a></div>
+
+<section class="card">
+    <div class="section-head">
+        <div>
+            <h2><%= ticket.subject %></h2>
+            <p>
+                <%= ticket.category %> · opened <%= when(ticket.createdAt) %>
+                <% if (isAdmin) { %> · <strong><%= nm(starter) %></strong> (<%= (starter && starter.role || ticket.role).toUpperCase() %>)<% if (partner && other) { %> ⇄ <strong><%= nm(other) %></strong><% } %><% if (starter && starter.email) { %> · <%= starter.email %><% } %>
+                <% } else { %> · with <strong><%= withName %></strong><% } %>
+            </p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+            <% if (ticket.escalated) { %><span class="badge rejected">Admin involved</span><% } %>
+            <span class="badge <%= stClass[ticket.status] %>"><%= ticket.status %></span>
+        </div>
+    </div>
+    <% if (ticket.donationId) { %><div class="hint-box" style="margin-top:0">Donation: <strong><%= ticket.donationId.foodName %></strong> (<%= ticket.donationId.quantity %> portions)</div><% } %>
+
+    <div class="thread">
+        <% ticket.messages.forEach(m => { const mine = isMine(m); %>
+            <div class="msg <%= mine ? 'mine' : 'theirs' %>">
+                <div class="who"><%= authorName(m) %> · <%= when(m.at) %></div>
+                <div class="bubble"><%= m.text %></div>
+            </div>
+        <% }) %>
+    </div>
+
+    <form action="<%= action %>" method="POST" class="reply-form">
+        <textarea name="message" rows="3" maxlength="2000" placeholder="<%= ticket.status === 'Resolved' ? 'Write a message to reopen this conversation…' : 'Write a reply…' %>" <%= isAdmin ? "" : "required" %>></textarea>
+        <div class="form-actions">
+            <% if (isAdmin) { %>
+                <button class="btn btn-primary" type="submit" name="status" value="In Progress">Send reply</button>
+                <button class="btn btn-outline" type="submit" name="status" value="Resolved">Send &amp; mark resolved</button>
+            <% } else { %>
+                <button class="btn btn-primary" type="submit"><%= ticket.status === "Resolved" ? "Reopen" : "Send" %></button>
+                <% if (ticket.status !== "Resolved") { %><button class="btn btn-outline" type="submit" name="status" value="Resolved" formnovalidate>Mark as resolved</button><% } %>
+            <% } %>
+        </div>
+    </form>
+
+    <% if (!isAdmin && partner && !ticket.escalated) { %>
+        <form action="/support/<%= ticket._id %>/escalate" method="POST" class="hint-box warn" onsubmit="return confirm('Bring the admin into this conversation? They will be able to read all messages.')">
+            Not getting anywhere? <button class="btn btn-danger-outline btn-sm" type="submit" style="margin-left:8px">Ask the admin to step in</button>
+        </form>
+    <% } %>
+</section>
+
+<%- include('partials/shell-end') %>

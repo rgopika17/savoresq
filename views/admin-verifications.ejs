@@ -1,0 +1,77 @@
+<%- include('partials/shell-start', { title: 'Verifications', subtitle: 'Approve Hotels and NGOs before they can use the platform.', active: 'verifications' }) %>
+
+<%
+    const all = [].concat(hotels, ngos);
+    const pending  = all.filter(u => u.approvalStatus === "Pending");
+    const rejected = all.filter(u => u.approvalStatus === "Rejected");
+    const icon = (u) => u.role === "hotel" ? "" : "";
+%>
+
+<div class="toolbar">
+    <div class="tabs" id="tabs">
+        <button class="tab on" data-f="pending" type="button">Pending <span class="n"><%= pending.length %></span></button>
+        <button class="tab" data-f="rejected" type="button">Rejected <span class="n"><%= rejected.length %></span></button>
+    </div>
+    <div class="tabs" id="roleTabs">
+        <button class="tab on" data-r="all" type="button">All</button>
+        <button class="tab" data-r="hotel" type="button">Hotels</button>
+        <button class="tab" data-r="ngo" type="button">NGOs</button>
+    </div>
+</div>
+
+<% [["pending", pending, "No pending applications. You’re all caught up! "], ["rejected", rejected, "No rejected applications."]].forEach(g => { %>
+    <section data-group="<%= g[0] %>" style="<%= g[0] === 'rejected' ? 'display:none' : '' %>">
+        <% if (!g[1].length) { %>
+            <div class="empty"><div class="big"><%= g[0] === "pending" ? "" : "" %></div><strong><%= g[2] %></strong></div>
+        <% } else { %>
+            <div class="org-grid">
+                <% g[1].forEach(u => { %>
+                    <article class="org-card" data-role="<%= u.role %>">
+                        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+                            <span class="badge <%= u.role === 'hotel' ? 'info' : 'available' %>"><%= icon(u) %> <%= u.role.toUpperCase() %></span>
+                            <span class="badge <%= g[0] %>"><%= g[0] === "pending" ? "Pending" : "Rejected" %></span>
+                        </div>
+                        <h3><%= u.organizationName || u.name %></h3>
+                        <div class="lines">
+                            <div> <strong><%= u.name %></strong> · <%= u.email %></div>
+                            <div> <%= u.phone || "Not provided" %> ·  <%= u.registrationNumber || "No reg. number" %></div>
+                            <div> <%= [u.city, u.state].filter(Boolean).join(", ") || "—" %> · PIN <strong><%= u.pincode %></strong></div>
+                            <% if (g[0] === "rejected") { %><div> <%= u.rejectionReason || "No reason recorded" %></div><% } %>
+                        </div>
+                        <div class="row-actions">
+                            <a class="btn btn-outline btn-sm" href="#details-<%= u._id %>">View details</a>
+                            <form class="inline-form" method="POST" action="/admin/user/<%= u._id %>/approve">
+                                <button class="btn btn-primary btn-sm" type="submit">✓ <%= g[0] === "pending" ? "Approve" : "Approve anyway" %></button>
+                            </form>
+                            <% if (g[0] === "pending") { %>
+                                <form class="inline-form" method="POST" action="/admin/user/<%= u._id %>/reject" onsubmit="return askReason(this, 'rejectionReason', 'Why are you rejecting <%= (u.organizationName || u.name).replace(/'/g, '') %>?', 'Reject')">
+                                    <input type="hidden" name="rejectionReason">
+                                    <button class="btn btn-danger-outline btn-sm" type="submit">✕ Reject</button>
+                                </form>
+                            <% } %>
+                        </div>
+                    </article>
+                <% }) %>
+            </div>
+        <% } %>
+    </section>
+<% }) %>
+
+<%- include('partials/admin-modals', { list: all, from: 'verifications' }) %>
+
+<script>
+(function () {
+    var group = "pending", role = "all";
+    function apply() {
+        document.querySelectorAll("[data-group]").forEach(function (s) { s.style.display = s.dataset.group === group ? "" : "none"; });
+        document.querySelectorAll(".org-card").forEach(function (c) { c.style.display = (role === "all" || c.dataset.role === role) ? "" : "none"; });
+    }
+    document.querySelectorAll("#tabs .tab").forEach(function (t) { t.onclick = function () {
+        document.querySelectorAll("#tabs .tab").forEach(function (x) { x.classList.remove("on"); }); t.classList.add("on"); group = t.dataset.f; apply(); }; });
+    document.querySelectorAll("#roleTabs .tab").forEach(function (t) { t.onclick = function () {
+        document.querySelectorAll("#roleTabs .tab").forEach(function (x) { x.classList.remove("on"); }); t.classList.add("on"); role = t.dataset.r; apply(); }; });
+})();
+</script>
+
+<%- include('partials/reason-modal') %>
+<%- include('partials/shell-end') %>

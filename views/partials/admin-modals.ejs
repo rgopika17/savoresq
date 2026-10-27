@@ -1,0 +1,50 @@
+<% /* Detail modals for organizations. Pass { list }. Opened with href="#details-<id>". */ %>
+<% list.forEach(function (u) { %>
+    <div class="modal" id="details-<%= u._id %>">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h2><%= u.role === "hotel" ? "" : u.role === "ngo" ? "" : "" %> <%= u.organizationName || u.name %></h2>
+                <a class="btn btn-outline btn-sm" href="#">✕ Close</a>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+                <span class="badge <%= u.approvalStatus === 'Approved' ? 'approved' : u.approvalStatus === 'Rejected' ? 'rejected' : 'pending' %>">Approval: <%= u.approvalStatus %></span>
+                <span class="badge <%= u.accountStatus === 'Suspended' ? 'suspended' : u.accountStatus === 'Active' ? 'active' : 'pending' %>">Account: <%= u.accountStatus %></span>
+            </div>
+            <div class="kv">
+                <div><small>Contact person</small><strong><%= u.name %></strong></div>
+                <div><small>Email</small><strong><%= u.email %></strong></div>
+                <div><small>Phone</small><strong><%= u.phone || "Not provided" %></strong></div>
+                <div><small>Registration no.</small><strong><%= u.registrationNumber || "Not provided" %></strong></div>
+                <div><small>Address</small><strong><%= u.address || "Not provided" %></strong></div>
+                <div><small>City / State</small><strong><%= [u.city, u.state].filter(Boolean).join(", ") || "—" %></strong></div>
+                <div><small>Pincode</small><strong><%= u.pincode %></strong></div>
+                <div><small>Registered</small><strong><%= u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-IN") : "—" %></strong></div>
+            </div>
+            <% if (u.accountStatus === "Suspended" && u.suspensionReason) { %>
+                <div class="hint-box danger"><strong>Suspension reason:</strong> <%= u.suspensionReason %></div>
+            <% } %>
+            <div class="modal-section">
+                <h3> Verification document</h3>
+                <% if (u.verificationDocument && u.verificationDocument.path) { %>
+                    <p class="muted small" style="margin-bottom:10px"><%= u.verificationDocument.filename || "Submitted document" %></p>
+                    <div class="row-actions">
+                        <a class="btn btn-primary btn-sm" href="/admin/verification-document/<%= u._id %>/view?from=<%= typeof from !== 'undefined' ? from : 'verifications' %>"> View document</a>
+                        <a class="btn btn-outline btn-sm" href="/admin/verification-document/<%= u._id %>?download=1">Download</a>
+                    </div>
+                <% } else { %>
+                    <p class="muted"> No verification document is linked to this account.</p>
+                <% } %>
+            </div>
+            <div class="form-actions">
+                <% if (u.approvalStatus !== "Approved") { %>
+                    <form class="inline-form" method="POST" action="/admin/user/<%= u._id %>/approve"><button class="btn btn-primary btn-sm" type="submit">✓ Approve</button></form>
+                <% } %>
+                <% if (u.approvalStatus === "Pending") { %>
+                    <form class="inline-form" method="POST" action="/admin/user/<%= u._id %>/reject" onsubmit="return askReason(this, 'rejectionReason', 'Why are you rejecting <%= (u.organizationName || u.name).replace(/'/g, '') %>?', 'Reject')">
+                        <input type="hidden" name="rejectionReason"><button class="btn btn-danger-outline btn-sm" type="submit">✕ Reject</button>
+                    </form>
+                <% } %>
+            </div>
+        </div>
+    </div>
+<% }) %>

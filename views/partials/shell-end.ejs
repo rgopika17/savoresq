@@ -1,0 +1,71 @@
+        </div><!-- /.page -->
+
+        <div class="footer">© <%= new Date().getFullYear() %> SavoResQ — Surplus Food Rescue &amp; Distribution System </div>
+    </div><!-- /.main -->
+</div><!-- /.app -->
+
+<script>
+(function () {
+    /* mobile sidebar */
+    var body = document.body;
+    document.getElementById("menuBtn").addEventListener("click", function () { body.classList.toggle("nav-open"); });
+    document.getElementById("scrim").addEventListener("click", function () { body.classList.remove("nav-open"); });
+    document.querySelectorAll(".sidebar .nav-link").forEach(function (a) {
+        a.addEventListener("click", function () { body.classList.remove("nav-open"); });
+    });
+
+    /* close the profile menu on outside click */
+    var um = document.getElementById("userMenu");
+    document.addEventListener("click", function (e) { if (!um.contains(e.target)) um.removeAttribute("open"); });
+
+    /* sidebar highlight for in-page anchors (#post, #history ...) */
+    var hash = location.hash;
+    if (hash) {
+        var link = document.querySelector('.sidebar .nav-link[href$="' + hash + '"]');
+        if (link) {
+            document.querySelectorAll(".sidebar .nav-link.active").forEach(function (a) { a.classList.remove("active"); });
+            link.classList.add("active");
+        }
+    }
+
+    /* notifications */
+    var bell = document.getElementById("bell"), panel = document.getElementById("notifPanel"),
+        list = document.getElementById("notifList"), count = document.getElementById("bellCount"), last = 0;
+
+    function esc(t) { var d = document.createElement("div"); d.textContent = t == null ? "" : String(t); return d.innerHTML; }
+    function ago(d) {
+        var s = Math.floor((Date.now() - new Date(d)) / 1000);
+        if (s < 60) return "just now";
+        if (s < 3600) return Math.floor(s / 60) + " min ago";
+        if (s < 86400) return Math.floor(s / 3600) + " h ago";
+        return Math.floor(s / 86400) + " d ago";
+    }
+    async function load() {
+        try {
+            var res = await fetch("/notifications", { headers: { Accept: "application/json" } });
+            var data = await res.json();
+            if (data.unread > 0) { count.style.display = ""; count.textContent = data.unread > 9 ? "9+" : data.unread; }
+            else { count.style.display = "none"; }
+            if (data.unread > last) { bell.classList.add("ring"); setTimeout(function () { bell.classList.remove("ring"); }, 2000); }
+            last = data.unread;
+            if (!data.items.length) { list.innerHTML = '<div class="notif-empty"> You are all caught up.</div>'; return; }
+            list.innerHTML = data.items.map(function (n) {
+                return '<div class="notif-item ' + (n.read ? "" : "unread") + '" data-id="' + n._id + '" data-link="' + esc(n.link || "") + '">' +
+                    '<div class="notif-ico">' + esc(n.icon) + '</div><div><strong>' + esc(n.title) + '</strong><p>' + esc(n.message) +
+                    '</p><small>' + ago(n.createdAt) + '</small></div></div>';
+            }).join("");
+        } catch (e) { list.innerHTML = '<div class="notif-empty">Could not load notifications.</div>'; }
+    }
+    bell.addEventListener("click", function (e) { e.stopPropagation(); panel.classList.toggle("open"); if (panel.classList.contains("open")) load(); });
+    document.addEventListener("click", function (e) { if (!document.getElementById("notifWrap").contains(e.target)) panel.classList.remove("open"); });
+    document.getElementById("markAll").addEventListener("click", async function (e) { e.stopPropagation(); await fetch("/notifications/read-all", { method: "POST" }); load(); });
+    list.addEventListener("click", async function (e) {
+        var item = e.target.closest(".notif-item"); if (!item) return;
+        await fetch("/notifications/" + item.dataset.id + "/read", { method: "POST" });
+        if (item.dataset.link) location.href = item.dataset.link; else load();
+    });
+    load(); setInterval(load, 60000);
+})();
+</script>
+</body>
+</html>

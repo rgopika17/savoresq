@@ -1,0 +1,65 @@
+<%- include('partials/shell-start', { title: 'Profile Updates', subtitle: 'Review organization detail changes before they go live.', active: 'updates' }) %>
+
+<%
+    const labels = { name: "Contact Person", phone: "Phone", organizationName: "Organization", registrationNumber: "Registration No.", address: "Address", city: "City", state: "State", country: "Country", pincode: "Pincode" };
+    const who = (x) => x.userId ? (x.userId.organizationName || x.userId.name) : "Organization";
+%>
+
+<div class="section-head"><div><h2>Pending requests <span class="badge pending"><%= profileUpdates.length %></span></h2></div></div>
+
+<% if (!profileUpdates.length) { %>
+    <div class="empty"><div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18l-2 13H5z"/><path d="M8 7a4 4 0 0 1 8 0"/></svg></div><strong>No pending profile updates</strong>Approved and rejected changes are listed below.</div>
+<% } %>
+
+<% profileUpdates.forEach(update => { %>
+    <article class="card" style="margin-bottom:18px">
+        <div class="section-head" style="margin-bottom:10px">
+            <div><h3 style="font-size:18px"><%= who(update) %></h3>
+                <p><%= update.role.toUpperCase() %> · <%= update.userId ? update.userId.email : "—" %> · requested <%= new Date(update.createdAt).toLocaleString() %></p></div>
+            <span class="badge pending"> Pending</span>
+        </div>
+        <div class="diff">
+            <div class="h">Field</div><div class="h">Current</div><div class="h">Requested</div>
+            <% update.changedFields.forEach(f => { %>
+                <div><strong><%= labels[f] || f %></strong></div>
+                <div class="old"><%= update.currentData[f] || "—" %></div>
+                <div class="new"><%= update.requestedData[f] || "—" %></div>
+            <% }) %>
+        </div>
+        <div class="form-actions">
+            <form class="inline-form" action="/admin/profile-update/<%= update._id %>/approve" method="POST" onsubmit="return confirm('Approve these changes?')">
+                <button class="btn btn-primary btn-sm" type="submit">✓ Approve changes</button>
+            </form>
+            <form class="inline-form" action="/admin/profile-update/<%= update._id %>/reject" method="POST" style="display:flex;gap:8px;flex-wrap:wrap" onsubmit="return confirm('Reject these changes?')">
+                <input class="input" style="width:260px;padding:8px 12px" type="text" name="rejectionReason" placeholder="Reason (optional)">
+                <button class="btn btn-danger-outline btn-sm" type="submit">✕ Reject</button>
+            </form>
+        </div>
+    </article>
+<% }) %>
+
+<section class="card">
+    <div class="section-head"><div><h2> Recent review history</h2></div></div>
+    <% if (!recentProfileUpdates.length) { %>
+        <div class="empty"><strong>No history yet</strong></div>
+    <% } else { %>
+        <div class="table-wrap">
+            <table class="table">
+                <thead><tr><th>Organization</th><th>Role</th><th>Decision</th><th>Reviewed by</th><th>Date</th></tr></thead>
+                <tbody>
+                <% recentProfileUpdates.forEach(u => { %>
+                    <tr>
+                        <td><strong><%= who(u) %></strong><% if (u.status === "Rejected" && u.rejectionReason) { %><br><span class="muted small">Reason: <%= u.rejectionReason %></span><% } %></td>
+                        <td><%= u.role.toUpperCase() %></td>
+                        <td><span class="badge <%= u.status === 'Approved' ? 'approved' : 'rejected' %>"><%= u.status %></span></td>
+                        <td><%= u.reviewedBy ? u.reviewedBy.name : "—" %></td>
+                        <td class="small muted"><%= new Date(u.reviewedAt || u.updatedAt).toLocaleString() %></td>
+                    </tr>
+                <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</section>
+
+<%- include('partials/shell-end') %>

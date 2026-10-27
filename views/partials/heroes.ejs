@@ -1,0 +1,29 @@
+<%# Community Heroes: this month's top hotels and NGOs. Pass { heroes, meId } %>
+<%
+    const medals = ["1", "2", "3"];
+    const has = heroes && (heroes.hotels.length || heroes.ngos.length);
+%>
+<section class="card" id="heroes">
+    <div class="section-head">
+        <div><h2> Community Heroes — <%= heroes.month %></h2><p>Celebrating the partners who rescued the most meals this month.</p></div>
+    </div>
+    <% if (!has) { %>
+        <div class="empty"><div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></div><strong>Be the first hero this month</strong>Complete a rescue and your name shines here.</div>
+    <% } else { %>
+        <div class="heroes">
+            <% [[" Top Hotels", heroes.hotels], [" Top NGOs", heroes.ngos]].forEach(col => { %>
+                <div>
+                    <h3 class="hero-col"><%= col[0] %></h3>
+                    <% if (!col[1].length) { %><p class="muted small">No completed rescues yet.</p><% } %>
+                    <% col[1].forEach((h, i) => { %>
+                        <div class="hero-row <%= h.id === String(meId) ? 'me' : '' %>">
+                            <span class="medal"><%= medals[i] %></span>
+                            <div><strong><%= h.name %><% if (h.id === String(meId)) { %> <em>(you)</em><% } %></strong><small><%= h.city %><%= h.city ? " · " : "" %><%= h.rescues %> rescue<%= h.rescues === 1 ? "" : "s" %></small></div>
+                            <b><%= h.portions %><small> meals</small></b>
+                        </div>
+                    <% }) %>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+</section>

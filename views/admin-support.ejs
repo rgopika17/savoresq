@@ -1,0 +1,40 @@
+<%- include('partials/shell-start', { title: 'Support Requests', subtitle: 'Messages and reports from hotels and NGOs.', active: 'support' }) %>
+
+<%
+    const stClass = { "Open": "pending", "In Progress": "accepted", "Resolved": "completed" };
+    const when = (d) => new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+%>
+
+<section class="card">
+    <div class="section-head">
+        <div><h2>Inbox</h2><p>New and unanswered requests appear first.</p></div>
+        <div class="tabs">
+            <a class="tab <%= status === 'All' ? 'on' : '' %>" href="/admin/support">All <span class="n"><%= counts.all %></span></a>
+            <a class="tab <%= status === 'Open' ? 'on' : '' %>" href="/admin/support?status=Open">Open <span class="n"><%= counts.open %></span></a>
+            <a class="tab <%= status === 'In Progress' ? 'on' : '' %>" href="/admin/support?status=In%20Progress">In progress <span class="n"><%= counts.progress %></span></a>
+            <a class="tab <%= status === 'Resolved' ? 'on' : '' %>" href="/admin/support?status=Resolved">Resolved <span class="n"><%= counts.resolved %></span></a>
+        </div>
+    </div>
+
+    <% if (!tickets.length) { %>
+        <div class="empty"><strong>No requests here</strong>When hotels or NGOs contact you, their messages show up in this inbox.</div>
+    <% } else { %>
+        <div class="table-wrap"><table class="table">
+            <thead><tr><th>From</th><th>Topic</th><th>Subject</th><th>Updated</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            <% tickets.forEach(t => { const u = t.userId || {}; %>
+                <tr>
+                    <td><strong><%= u.organizationName || u.name || "Deleted user" %></strong><% if (t.kind === "partner" && t.partnerId) { %> ⇄ <strong><%= t.partnerId.organizationName || t.partnerId.name %></strong><% } %><br><span class="muted small"><%= (t.role || "").toUpperCase() %><%= t.kind === "partner" ? " · escalated hotel/NGO chat" : "" %></span></td>
+                    <td><%= t.category %></td>
+                    <td><%= t.subject %><% if (t.unreadForAdmin) { %> <span class="badge pending">New</span><% } %></td>
+                    <td class="nowrap"><%= when(t.updatedAt) %></td>
+                    <td><span class="badge <%= stClass[t.status] %>"><%= t.status %></span></td>
+                    <td><a class="btn btn-outline btn-sm" href="/admin/support/<%= t._id %>">Open</a></td>
+                </tr>
+            <% }) %>
+            </tbody>
+        </table></div>
+    <% } %>
+</section>
+
+<%- include('partials/shell-end') %>

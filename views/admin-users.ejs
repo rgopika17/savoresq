@@ -1,0 +1,86 @@
+<%- include('partials/shell-start', { title: 'User Management', subtitle: 'Search accounts, review details, suspend or reactivate.', active: 'users' }) %>
+
+<div class="toolbar">
+    <input class="search" id="q" type="search" placeholder="Search name, organization, email or pincode…">
+    <div class="tabs" id="roleTabs">
+        <button class="tab on" data-r="all" type="button">All <span class="n"><%= users.length %></span></button>
+        <button class="tab" data-r="hotel" type="button">Hotels <span class="n"><%= hotels.length %></span></button>
+        <button class="tab" data-r="ngo" type="button">NGOs <span class="n"><%= ngos.length %></span></button>
+    </div>
+</div>
+<% const cnt = f => users.filter(f).length; %>
+<div class="toolbar" style="margin-top:-6px">
+    <div class="tabs" id="statusTabs">
+        <button class="tab on" data-s="all" type="button">All status <span class="n"><%= users.length %></span></button>
+        <button class="tab" data-s="Pending" type="button">Pending <span class="n"><%= cnt(u => u.approvalStatus === 'Pending') %></span></button>
+        <button class="tab" data-s="Approved" type="button">Approved <span class="n"><%= cnt(u => u.approvalStatus === 'Approved') %></span></button>
+        <button class="tab" data-s="Rejected" type="button">Rejected <span class="n"><%= cnt(u => u.approvalStatus === 'Rejected') %></span></button>
+        <button class="tab" data-s="Suspended" type="button">Suspended <span class="n"><%= cnt(u => u.accountStatus === 'Suspended') %></span></button>
+    </div>
+</div>
+
+<section class="card" style="padding:0;border:0;box-shadow:none;background:none">
+<% if (!users.length) { %>
+    <div class="empty"><div class="big"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.6 5.2"/></svg></div><strong>No users yet</strong>Registered hotels and NGOs will appear here.</div>
+<% } else { %>
+    <div class="table-wrap">
+        <table class="table" id="userTable">
+            <thead><tr><th>Organization</th><th>Role</th><th>Email</th><th>Pincode</th><th>Approval</th><th>Account</th><th>Actions</th></tr></thead>
+            <tbody>
+            <% users.forEach(u => { %>
+                <tr data-role="<%= u.role %>" data-approval="<%= u.approvalStatus %>" data-account="<%= u.accountStatus %>" data-text="<%= [u.name, u.organizationName, u.email, u.pincode].join(' ').toLowerCase() %>">
+                    <td><strong><%= u.organizationName || u.name %></strong><br><span class="muted small"><%= u.name %></span></td>
+                    <td><span class="badge <%= u.role === 'hotel' ? 'info' : 'available' %>"><%= u.role.toUpperCase() %></span></td>
+                    <td class="small"><%= u.email %></td>
+                    <td><%= u.pincode %></td>
+                    <td><span class="badge <%= u.approvalStatus === 'Approved' ? 'approved' : u.approvalStatus === 'Rejected' ? 'rejected' : 'pending' %>"><%= u.approvalStatus %></span></td>
+                    <td><span class="badge <%= u.accountStatus === 'Suspended' ? 'suspended' : u.accountStatus === 'Active' ? 'active' : 'pending' %>"><%= u.accountStatus %></span></td>
+                    <td>
+                        <div class="row-actions">
+                            <a class="btn btn-outline btn-sm" href="#details-<%= u._id %>">Details</a>
+                            <% if (u.accountStatus === "Suspended") { %>
+                                <form class="inline-form" method="POST" action="/admin/user/<%= u._id %>/activate"><button class="btn btn-primary btn-sm" type="submit">Activate</button></form>
+                            <% } else if (u.accountStatus === "Active") { %>
+                                <form class="inline-form" method="POST" action="/admin/user/<%= u._id %>/suspend" onsubmit="return askReason(this, 'suspensionReason', 'Why are you suspending <%= (u.organizationName || u.name).replace(/'/g, '') %>?', 'Suspend')">
+                                    <input type="hidden" name="suspensionReason"><button class="btn btn-danger-outline btn-sm" type="submit">Suspend</button>
+                                </form>
+                            <% } %>
+                        </div>
+                    </td>
+                </tr>
+            <% }) %>
+            </tbody>
+        </table>
+    </div>
+    <div class="empty hidden" id="noMatch" style="margin-top:14px"><strong>No users match this filter or search</strong></div>
+<% } %>
+</section>
+
+<%- include('partials/admin-modals', { list: users, from: 'users' }) %>
+
+<script>
+(function () {
+    var role = "all", status = "all", q = document.getElementById("q");
+    function apply() {
+        var term = q.value.trim().toLowerCase(), shown = 0;
+        document.querySelectorAll("#userTable tbody tr").forEach(function (r) {
+            var okS = status === "all" || r.dataset.approval === status || (status === "Suspended" && r.dataset.account === "Suspended");
+            var ok = okS && (role === "all" || r.dataset.role === role) && (!term || r.dataset.text.indexOf(term) > -1);
+            r.style.display = ok ? "" : "none"; if (ok) shown++;
+        });
+        var nm = document.getElementById("noMatch"); if (nm) nm.classList.toggle("hidden", shown > 0);
+    }
+    q.addEventListener("input", apply);
+    document.querySelectorAll("#statusTabs .tab").forEach(function (t) { t.onclick = function () {
+        document.querySelectorAll("#statusTabs .tab").forEach(function (x) { x.classList.remove("on"); }); t.classList.add("on"); status = t.dataset.s;
+        try { history.replaceState(null, "", "?status=" + encodeURIComponent(status)); } catch (e) {} apply(); }; });
+    // open straight on a filter, e.g. /admin/users?status=Pending
+    var want = new URLSearchParams(location.search).get("status");
+    if (want) { var wb = document.querySelector('#statusTabs .tab[data-s="' + want.charAt(0).toUpperCase() + want.slice(1).toLowerCase() + '"]'); if (wb) wb.click(); }
+    document.querySelectorAll("#roleTabs .tab").forEach(function (t) { t.onclick = function () {
+        document.querySelectorAll("#roleTabs .tab").forEach(function (x) { x.classList.remove("on"); }); t.classList.add("on"); role = t.dataset.r; apply(); }; });
+})();
+</script>
+
+<%- include('partials/reason-modal') %>
+<%- include('partials/shell-end') %>

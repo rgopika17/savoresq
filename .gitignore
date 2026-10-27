@@ -1,0 +1,4 @@
+node_modules/
+.env
+uploads/
+app_backup*.js
