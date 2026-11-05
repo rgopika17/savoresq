@@ -11,7 +11,6 @@
     <div class="kv">
         <div><small>Quantity</small><strong><%= donation.quantity %> portions</strong></div>
         <div><small>Pincode</small><strong><%= donation.pincode %></strong></div>
-        <% if (donation.estimatedValue > 0) { %><div><small>Approx. value</small><strong>₹<%= donation.estimatedValue.toLocaleString("en-IN") %></strong></div><% } %>
         <div><small>Expiry time</small><strong><%= new Date(donation.expiryTime).toLocaleString() %></strong></div>
     </div>
 

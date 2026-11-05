@@ -10,7 +10,6 @@
             <div class="field"><label>Quantity (portions)</label><input type="number" name="quantity" min="1" value="<%= donation.quantity %>" required></div>
             <div class="field"><label>Pincode</label><input type="text" name="pincode" maxlength="6" pattern="[0-9]{6}" value="<%= donation.pincode %>" required></div>
             <div class="field full"><label>Expiry date &amp; time</label><input type="datetime-local" name="expiryTime" value="<%= new Date(new Date(donation.expiryTime).getTime() - new Date(donation.expiryTime).getTimezoneOffset() * 60000).toISOString().slice(0,16) %>" required></div>
-            <div class="field full"><label>Approx. value in ₹ <span class="muted">(optional)</span></label><input type="number" name="estimatedValue" min="0" max="10000000" value="<%= donation.estimatedValue || '' %>"></div>
             <div class="field full">
                 <label for="foodImage">Photo of the food</label>
                 <div class="food-media" style="height:170px;border-radius:12px"><%- foodVisual(donation.foodName, 64, donation.image) %></div>

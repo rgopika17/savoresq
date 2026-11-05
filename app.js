@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3000;
 // MIDDLEWARE
 // ======================================================
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "400kb" })); // profile pictures arrive as small data URLs
 app.use(express.json());
 
 const isProd = process.env.NODE_ENV === "production";
@@ -103,7 +103,7 @@ app.use(async (req, res, next) => {
 
     try {
         const account = await User.findById(sessionUser.id)
-            .select("name organizationName role accountStatus pincode");
+            .select("name organizationName role accountStatus pincode avatar");
 
         // Suspended / deleted while logged in -> end the session immediately
         if (!account || ["Suspended", "Deleted"].includes(account.accountStatus)) {
@@ -117,7 +117,8 @@ app.use(async (req, res, next) => {
             id: sessionUser.id,
             role: account.role,
             name: account.name,
-            orgName: account.organizationName || ""
+            orgName: account.organizationName || "",
+            avatar: account.avatar || ""
         };
 
         if (!isPageRequest) return next();
@@ -269,14 +270,6 @@ a{display:inline-block;padding:11px 22px;border-radius:11px;background:#198754;c
 a:hover{background:#156a4c}
 </style></head><body><div class="box"><h2>${title}</h2>${body ? `<p>${body}</p>` : ""}<a href="${linkHref}">${linkText}</a></div></body></html>`;
 }
-
-// optional "approximate value in rupees" typed by the hotel (0 when empty/invalid)
-function parseValue(input) {
-    const n = Math.round(Number(String(input || "").replace(/,/g, "")));
-    return Number.isFinite(n) && n > 0 ? Math.min(n, 10000000) : 0;
-}
-
-const sumValue = list => list.reduce((s, d) => s + (Number(d.estimatedValue) || 0), 0);
 
 function countByStatus(list, status) {
     return list.filter(d => d.status === status).length;
@@ -996,7 +989,6 @@ app.get("/hotel", requireRole("hotel"), async (req, res) => {
             .filter(d => d.status === "Completed")
             .reduce((sum, d) => sum + (Number(d.quantity) || 0), 0);
 
-        const valueRescued = sumValue(donations.filter(d => d.status === "Completed"));
 
         const hotel = await User.findById(req.session.user.id).select("pincode address city state location organizationName");
         const hotelPincode =
@@ -1033,7 +1025,6 @@ app.get("/hotel", requireRole("hotel"), async (req, res) => {
             heroes: await communityHeroes(),
             donations,
             rescuedQuantity,
-            valueRescued,
             hotelPincode,
             totalDonations: donations.length,
             available: countByStatus(donations, "Available"),
@@ -1106,7 +1097,6 @@ app.post("/donation", requireRole("hotel"), foodPhotoUpload("/hotel#post"), asyn
             pincode: cleanPincode,
             expiryTime: expiryDate,
             image: imageName,
-            estimatedValue: parseValue(req.body.estimatedValue),
             status: "Available",
             acceptedBy: null
         });
@@ -1276,7 +1266,6 @@ app.post(
             quantity: Number(quantity),
             pincode: cleanPincode,
             expiryTime: expiryDate,
-            estimatedValue: parseValue(req.body.estimatedValue)
         };
 
         if (req.file) {
@@ -1405,7 +1394,6 @@ app.get("/ngo", requireRole("ngo"), async (req, res) => {
             heroes: await communityHeroes(),
             pendingFeedbackCount,
             totalAccepted: myDonations.length,
-            valueRescued: sumValue(completedWithoutFeedback),
             donations,
             myDonations,
             acceptedCount,
@@ -1822,7 +1810,7 @@ app.get("/admin", requireRole("admin"), async (req, res) => {
         const [users, donations, feedbacks, profileUpdates] = await Promise.all([
             User.find({ role: { $in: ["hotel", "ngo"] }, accountStatus: { $ne: "Deleted" } })
                 .select("role approvalStatus accountStatus pincode"),
-            Donation.find().select("status quantity estimatedValue pincode"),
+            Donation.find().select("status quantity pincode"),
             Feedback.find().select("rating"),
             ProfileUpdate.countDocuments({ status: "Pending" })
         ]);
@@ -1864,7 +1852,6 @@ app.get("/admin", requireRole("admin"), async (req, res) => {
 
             totalQuantity: sumQty(donations),
             rescuedQuantity: sumQty(donations.filter(d => d.status === "Completed")),
-            valueRescued: sumValue(donations.filter(d => d.status === "Completed")),
 
             averageRating,
             feedbackCount: feedbacks.length
@@ -2628,6 +2615,39 @@ app.get("/account/profile/edit", requireLogin, async (req, res) => {
     } catch (error) {
         console.error("Profile edit page error:", error);
         res.status(500).send("Unable to load profile edit page.");
+    }
+});
+
+// ---- profile picture (stored in MongoDB as a small image, so it survives redeploys) ----
+const AVATAR_RE = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+const AVATAR_MAX_CHARS = 250000; // ~180 KB of image; the browser shrinks pictures to 256x256 first
+
+app.post("/account/avatar", requireLogin, async (req, res) => {
+    try {
+        const data = String(req.body.avatar || "");
+        if (!AVATAR_RE.test(data) || data.length > AVATAR_MAX_CHARS) {
+            flash(req, "error", "Please choose a valid JPG, PNG or WebP picture.");
+            return res.redirect("/account/profile/edit");
+        }
+        await User.updateOne({ _id: req.session.user.id }, { $set: { avatar: data } });
+        flash(req, "success", "Profile picture updated.");
+        res.redirect("/account/profile/edit");
+    } catch (error) {
+        console.error("Avatar save error:", error);
+        flash(req, "error", "Could not save the picture. Please try again.");
+        res.redirect("/account/profile/edit");
+    }
+});
+
+app.post("/account/avatar/remove", requireLogin, async (req, res) => {
+    try {
+        await User.updateOne({ _id: req.session.user.id }, { $set: { avatar: null } });
+        flash(req, "success", "Profile picture removed.");
+        res.redirect("/account/profile/edit");
+    } catch (error) {
+        console.error("Avatar remove error:", error);
+        flash(req, "error", "Could not remove the picture. Please try again.");
+        res.redirect("/account/profile/edit");
     }
 });
 

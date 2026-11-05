@@ -21,7 +21,6 @@
     <div class="stat"><div class="stat-ico purple"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"/></svg></div><div><b><%= completed %></b><span>Completed</span></div></div>
     <div class="stat"><div class="stat-ico slate"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><b><%= expired %></b><span>Expired</span></div></div>
     <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.6a5.2 5.2 0 0 0-7.4 0L12 7l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 21.8l8.8-8.8a5.2 5.2 0 0 0 0-7.4z"/></svg></div><div><b><%= rescuedQuantity %></b><span>Portions Rescued</span></div></div>
-    <% if (valueRescued > 0) { %><div class="stat"><div class="stat-ico purple">₹</div><div><b>₹<%= valueRescued.toLocaleString("en-IN") %></b><span>Value Rescued</span></div></div><% } %>
 </section>
 
 
@@ -47,11 +46,6 @@
                 <div class="field">
                     <label for="expiryTime">Safe to eat until</label>
                     <input id="expiryTime" name="expiryTime" type="datetime-local" required>
-                </div>
-                <div class="field">
-                    <label for="estimatedValue">Approx. value in ₹ <span class="muted">(optional)</span></label>
-                    <input id="estimatedValue" name="estimatedValue" type="number" min="0" max="10000000" placeholder="e.g. 3000">
-                    <span class="help">For your records and impact reports only — NGOs get the food free.</span>
                 </div>
                 <div class="field full" id="memoryBox" <%= foodMemory.length ? "" : "hidden" %>>
                     <label>Your usual foods <span class="ai-tag">Memory</span> <span class="muted">— tap to post again</span></label>
@@ -156,7 +150,6 @@
                         <h3><%= d.foodName %></h3>
                         <div class="meta-line"> <strong><%= d.quantity %></strong> portions</div>
                         <div class="meta-line"> Expires <strong><%= fmt(d.expiryTime) %></strong></div>
-                        <% if (d.estimatedValue > 0) { %><div class="meta-line">₹ <strong>₹<%= d.estimatedValue.toLocaleString("en-IN") %></strong> approx. value</div><% } %>
                         <% if (d.status === "Available" && bestNgo[String(d._id)]) { const b = bestNgo[String(d._id)]; %>
                             <div class="match-pill" title="<%= b.reasons.join(' · ') %>"><span class="ai-tag">AI</span> Best NGO: <strong><%= b.name %></strong><b><%= b.pct %>%</b></div>
                         <% } %>

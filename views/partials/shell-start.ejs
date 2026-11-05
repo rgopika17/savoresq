@@ -157,7 +157,7 @@
                 <details class="user-menu" id="userMenu">
                     <summary>
                         <div class="user-chip">
-                            <div class="avatar"><%= initials %></div>
+                            <div class="avatar"><% if (u.avatar) { %><img src="<%= u.avatar %>" alt=""><% } else { %><%= initials %><% } %></div>
                             <div class="who"><strong><%= displayName %></strong><span><%= roleLabel %></span></div>
                         </div>
                     </summary>

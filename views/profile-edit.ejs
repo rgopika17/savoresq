@@ -4,11 +4,12 @@
     const labels = { name: "Contact Person", phone: "Phone", organizationName: "Organization", registrationNumber: "Registration No.", address: "Address", city: "City", state: "State", country: "Country", pincode: "Pincode" };
     const approved = user.approvalStatus === "Approved";
     const locked = user.accountStatus === "Deletion Requested" || user.accountStatus === "Deleted";
+    const initials = String(user.organizationName || user.name || "S").trim().split(/\s+/).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "S";
 %>
 
 <section class="hero">
     <div class="profile-hero">
-        <div class="avatar"><%= user.role === "hotel" ? "" : "" %></div>
+        <div class="avatar"><% if (user.avatar) { %><img src="<%= user.avatar %>" alt=""><% } else { %><%= initials %><% } %></div>
         <div>
             <h2 style="margin-bottom:4px"><%= user.organizationName || user.name %></h2>
             <p><%= [user.city, user.state].filter(Boolean).join(", ") %> · PIN <%= user.pincode %> · <%= user.role === "hotel" ? "Hotel" : "NGO" %> account</p>
@@ -19,6 +20,67 @@
         </div>
     </div>
 </section>
+
+<section class="card">
+    <div class="card-head"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4.5 4.5-6.5 8-6.5s7 2 8 6.5"/></svg></div><h2>Profile picture</h2></div>
+    <p class="card-sub">Shown in the top bar and on your profile. Saved straight away, no admin approval needed.</p>
+    <div class="avatar-editor">
+        <div class="avatar-preview" id="avPreview"><% if (user.avatar) { %><img src="<%= user.avatar %>" alt="Profile picture"><% } else { %><%= initials %><% } %></div>
+        <div>
+            <form id="avForm" action="/account/avatar" method="POST">
+                <input type="hidden" name="avatar" id="avData">
+                <input type="file" id="avFile" accept="image/jpeg,image/png,image/webp" hidden>
+                <div class="avatar-actions">
+                    <label for="avFile" class="btn btn-outline" style="cursor:pointer"><%= user.avatar ? "Change picture" : "Choose picture" %></label>
+                    <button class="btn btn-primary" id="avSave" type="submit" disabled>Save picture</button>
+                </div>
+            </form>
+            <% if (user.avatar) { %>
+                <form action="/account/avatar/remove" method="POST" style="margin-top:10px" onsubmit="return confirm('Remove your profile picture?')">
+                    <button class="btn btn-danger-outline btn-sm" type="submit">Remove picture</button>
+                </form>
+            <% } %>
+            <p class="help" id="avMsg" style="margin-top:10px">JPG, PNG or WebP. It is cropped to a square and shrunk automatically.</p>
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    var file = document.getElementById("avFile"), data = document.getElementById("avData"),
+        save = document.getElementById("avSave"), prev = document.getElementById("avPreview"),
+        msg = document.getElementById("avMsg");
+    function fail(t) { data.value = ""; save.disabled = true; msg.textContent = t; msg.style.color = "var(--red)"; }
+    file.addEventListener("change", function () {
+        var f = file.files && file.files[0];
+        if (!f) return;
+        if (!/^image\/(jpeg|png|webp)$/.test(f.type)) return fail("Please choose a JPG, PNG or WebP picture.");
+        if (f.size > 10 * 1024 * 1024) return fail("That picture is too large (max 10 MB).");
+        var reader = new FileReader();
+        reader.onload = function () {
+            var img = new Image();
+            img.onload = function () {
+                var size = 256, c = document.createElement("canvas");
+                c.width = c.height = size;
+                var side = Math.min(img.width, img.height),
+                    sx = (img.width - side) / 2, sy = (img.height - side) / 2,
+                    ctx = c.getContext("2d");
+                ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size);
+                ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+                var url = c.toDataURL("image/jpeg", 0.85);
+                if (url.length > 240000) return fail("Could not shrink that picture enough. Try another one.");
+                data.value = url; save.disabled = false;
+                prev.innerHTML = ""; var p = document.createElement("img"); p.src = url; p.alt = "Preview"; prev.appendChild(p);
+                msg.textContent = "Looks good? Click Save picture."; msg.style.color = "";
+            };
+            img.onerror = function () { fail("That file could not be read as a picture."); };
+            img.src = reader.result;
+        };
+        reader.onerror = function () { fail("That file could not be read."); };
+        reader.readAsDataURL(f);
+    });
+})();
+</script>
 
 <% if (pendingProfileUpdate) { %>
     <section class="card">

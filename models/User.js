@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema(
             lng: { type: Number, default: null }
         },
 
+        // profile picture as a small data URL (null = show initials)
+        avatar: { type: String, default: null },
+
         verificationDocument: {
             filename: { type: String, default: null },
             path: { type: String, default: null },

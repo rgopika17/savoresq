@@ -60,7 +60,6 @@
     <div class="stats" style="margin-top:26px">
         <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div><div><b><%= totalQuantity %></b><span>Total portions posted</span></div></div>
         <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"/></svg></div><div><b><%= rescuedQuantity %></b><span>Portions rescued</span></div></div>
-        <div class="stat"><div class="stat-ico purple">₹</div><div><b>₹<%= (valueRescued || 0).toLocaleString("en-IN") %></b><span>Est. value rescued</span></div></div>
         <div class="stat"><div class="stat-ico blue"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></div><div><b><%= averageRating %> / 5</b><span>Avg. food rating (<%= feedbackCount %>)</span></div></div>
     </div>
 </section>

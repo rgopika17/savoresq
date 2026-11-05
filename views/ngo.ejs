@@ -22,7 +22,6 @@
     <div class="stat"><div class="stat-ico amber"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg></div><div><b><%= acceptedCount %></b><span>Awaiting pickup</span></div></div>
     <div class="stat"><div class="stat-ico purple"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"/></svg></div><div><b><%= completedCount %></b><span>Completed Rescues</span></div></div>
     <div class="stat"><div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 5.6a5.2 5.2 0 0 0-7.4 0L12 7l-1.4-1.4a5.2 5.2 0 0 0-7.4 7.4L12 21.8l8.8-8.8a5.2 5.2 0 0 0 0-7.4z"/></svg></div><div><b><%= ngoRescuedQuantity || 0 %></b><span>Portions Rescued</span></div></div>
-    <% if (valueRescued > 0) { %><div class="stat"><div class="stat-ico slate">₹</div><div><b>₹<%= valueRescued.toLocaleString("en-IN") %></b><span>Value Rescued</span></div></div><% } %>
 </section>
 
 <% if (completedWithoutFeedback && completedWithoutFeedback.length > 0 && typeof pendingFeedbackCount !== "undefined" && pendingFeedbackCount > 0) { %>
@@ -97,7 +96,6 @@
                         <div class="meta-line"> <strong><%= hotelName(d.hotelId) %></strong></div>
                         <div class="meta-line"> <strong><%= d.quantity %></strong> portions</div>
                         <div class="meta-line"> <span class="countdown" style="<%= urgent(d.expiryTime) ? 'color:var(--red)' : '' %>"><%= left(d.expiryTime) %></span> · <%= fmt(d.expiryTime) %></div>
-                        <% if (d.estimatedValue > 0) { %><div class="meta-line">₹ <strong>₹<%= d.estimatedValue.toLocaleString("en-IN") %></strong> approx. value</div><% } %>
                         <% const m = matches[String(d._id)]; if (m) { %>
                             <div class="match-pill"><span class="ai-tag">Auto</span> Smart Match <b><%= m.pct %>%</b><span class="bar"><i style="width:<%= m.pct %>%"></i></span></div>
                             <div class="match-reasons"><%= m.reasons.join(" · ") %></div>

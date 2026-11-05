@@ -22,13 +22,20 @@ const FOODS = [
     // ---------- specific combos first ----------
     ["Chicken Curry", "chicken", "#f6b26b", "#c0562b", ["chicken curry", "butter chicken", "chicken masala", "chicken gravy"], P("curry")],
 
+    ["Chicken Fry", "chicken", "#f6b26b", "#c0562b", ["chicken fry", "chicken 65", "fried chicken", "chicken fried"], P("chickenfry")],
+
     // ---------- rice dishes (specific first) ----------
+    ["Mutton Biryani", "biryani", "#f6c26b", "#e07a2f", ["mutton biryani", "mutton briyani", "mutton biriyani", "lamb biryani", "goat biryani", "beef biryani"], P("muttonbiryani")],
     ["Biryani", "biryani", "#f6c26b", "#e07a2f", ["biryani", "briyani", "biriyani", "biriani", "dum rice"], P("biryani")],
+    ["Paneer Rice", "friedrice", "#ffe8b0", "#e8a33d", ["paneer rice", "paneer fried rice", "paneer pulao"], P("paneerrice")],
     ["Fried Rice", "friedrice", "#ffe08a", "#f4a259", ["fried rice", "egg rice", "schezwan rice", "szechuan rice"], P("friedrice")],
     ["Curd Rice", "currdrice", "#f5f7ef", "#cfe3d0", ["curd rice", "thayir sadam", "yogurt rice"]],
-    ["Lemon Rice", "lemonrice", "#fff3a3", "#f2c94c", ["lemon rice", "puliyodarai", "tamarind rice", "tomato rice", "coconut rice"]],
-    ["Pulao", "rice", "#ffe9b8", "#e9a64b", ["pulao", "pulav", "pilaf", "veg rice", "ghee rice", "jeera rice"]],
-    ["Meals", "thali", "#bfe3c0", "#5fa86e", ["meals", "thali", "lunch", "full meal", "combo", "lunch box"]],
+    ["Lemon Rice", "lemonrice", "#fff3a3", "#f2c94c", ["lemon rice", "lemon sadam"], P("lemonrice")],
+    ["Tamarind Rice", "rice", "#f2d3a0", "#a9622b", ["tamarind rice", "puliyodarai", "puli sadam", "puliyogare", "pulihora"], P("tamarindrice")],
+    ["Tomato Rice", "rice", "#ffd6c0", "#e4572e", ["tomato rice", "thakkali sadam", "tomato bath"], P("tomatorice")],
+    ["Pulao", "rice", "#ffe9b8", "#e9a64b", ["pulao", "pulav", "pilaf", "veg rice", "vegetable rice", "veg pulao", "vegetable pulao", "ghee rice", "jeera rice"], P("vegpulao")],
+    ["Meals", "thali", "#bfe3c0", "#5fa86e", ["meals", "thali", "lunch", "full meal", "combo", "lunch box"], P("meals")],
+    ["Sambar", "dal", "#ffe08a", "#d9922b", ["sambar rice", "sambar sadam", "sambar", "bisibele", "bisi bele"], P("sambar")],
     ["Rice", "rice", "#f3efe2", "#d8d0b0", ["rice", "sadam", "sambar rice", "bisibele", "khichdi", "kichadi"]],
 
     // ---------- tiffin ----------
@@ -36,9 +43,9 @@ const FOODS = [
     ["Dosa", "dosa", "#f7d9a0", "#d9a14a", ["dosa", "dosai", "uttapam", "oothappam", "adai", "pesarattu"], P("dosa")],
     ["Vada", "vada", "#f1c27d", "#c98a3b", ["vada", "vadai", "medu vada", "bonda", "bajji", "pakoda", "pakora"]],
     ["Pongal", "curry", "#fde7a6", "#e5b94a", ["pongal", "upma", "kesari", "rava"]],
-    ["Poori", "poori", "#f9d27a", "#e0a030", ["poori", "puri", "bhatura", "kachori"]],
-    ["Parotta", "parotta", "#f5d9a6", "#cf9b55", ["parotta", "porotta", "paratha", "parantha", "kothu", "kothu parotta"]],
-    ["Chapati", "chapati", "#f3dfb8", "#cfa66a", ["chapati", "chapathi", "roti", "phulka", "naan", "kulcha", "tortilla", "wrap"]],
+    ["Poori", "poori", "#f9d27a", "#e0a030", ["poori", "puri", "bhatura", "kachori"], P("poori")],
+    ["Parotta", "parotta", "#f5d9a6", "#cf9b55", ["parotta", "porotta", "paratha", "parantha", "kothu", "kothu parotta"], P("parotta")],
+    ["Chapati", "chapati", "#f3dfb8", "#cfa66a", ["chapati", "chapathi", "roti", "phulka", "naan", "kulcha", "tortilla", "wrap"], P("chapati")],
     ["Bread", "bread", "#f2d6a2", "#c8955a", ["bread", "bun", "toast", "loaf", "pav", "croissant", "rusk"]],
 
     // ---------- western / fast food ----------
